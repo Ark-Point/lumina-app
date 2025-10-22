@@ -40,7 +40,9 @@ export const SelectControl = styled.select`
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 
   &:focus-visible {
     outline: none;
@@ -65,7 +67,7 @@ export const HomeLayout = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 200px);
+  // max-height: calc(100vh - 200px);
   padding: 0 1.5rem;
 `;
 
@@ -121,7 +123,8 @@ export const ContextCard = styled.div`
 
 export const ContextPre = styled.pre`
   margin: 0;
-  font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas,
+  font-family:
+    ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
   font-size: 0.75rem;
   line-height: 1.25rem;
@@ -143,7 +146,8 @@ export const InfoText = styled.p`
 `;
 
 export const InlineCode = styled.code`
-  font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas,
+  font-family:
+    ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
   padding: 0.125rem 0.375rem;
   border-radius: 0.375rem;

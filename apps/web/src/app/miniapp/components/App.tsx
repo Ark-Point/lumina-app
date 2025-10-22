@@ -9,6 +9,8 @@ import {
   WalletTab,
 } from "@/app/miniapp/components/ui/tabs";
 import { USE_WALLET } from "@/app/miniapp/constant/mini-app";
+import { keyframes } from "@emotion/react";
+import styled from "@emotion/styled";
 import { useMiniApp } from "@neynar/react";
 import { useEffect } from "react";
 import { useNeynarUser } from "../hooks/useNeynarUser";
@@ -81,32 +83,31 @@ export default function App(
   // --- Early Returns ---
   if (!isSDKLoaded) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="spinner h-8 w-8 mx-auto mb-4"></div>
-          <p>Loading SDK...</p>
-        </div>
-      </div>
+      <LoadingScreen>
+        <LoadingContent>
+          <LoadingSpinner />
+          <LoadingMessage>Loading SDK...</LoadingMessage>
+        </LoadingContent>
+      </LoadingScreen>
     );
   }
 
+  const safeAreaInsets = {
+    top: context?.client.safeAreaInsets?.top ?? 0,
+    bottom: context?.client.safeAreaInsets?.bottom ?? 0,
+    left: context?.client.safeAreaInsets?.left ?? 0,
+    right: context?.client.safeAreaInsets?.right ?? 0,
+  };
+
   // --- Render ---
   return (
-    <div
-      style={{
-        paddingTop: context?.client.safeAreaInsets?.top ?? 0,
-        paddingBottom: context?.client.safeAreaInsets?.bottom ?? 0,
-        paddingLeft: context?.client.safeAreaInsets?.left ?? 0,
-        paddingRight: context?.client.safeAreaInsets?.right ?? 0,
-      }}
-    >
+    <SafeAreaWrapper $insets={safeAreaInsets}>
       {/* Header should be full width */}
       <Header neynarUser={neynarUser} />
 
       {/* Main content and footer should be centered */}
-      <div className="container py-2 pb-20">
-        {/* Main title */}
-        <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
+      <MainContent>
+        <MainTitle>{title}</MainTitle>
 
         {/* Tab content rendering */}
         {currentTab === Tab.Home && <HomeTab />}
@@ -120,7 +121,71 @@ export default function App(
           setActiveTab={setActiveTab}
           showWallet={USE_WALLET}
         />
-      </div>
-    </div>
+      </MainContent>
+    </SafeAreaWrapper>
   );
 }
+
+const SafeAreaWrapper = styled.div<{
+  $insets: { top: number; bottom: number; left: number; right: number };
+}>`
+  padding-top: ${({ $insets }) => `${$insets.top}px`};
+  padding-bottom: ${({ $insets }) => `${$insets.bottom}px`};
+  padding-left: ${({ $insets }) => `${$insets.left}px`};
+  padding-right: ${({ $insets }) => `${$insets.right}px`};
+`;
+
+const MainContent = styled.div`
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 0.5rem 1.5rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const MainTitle = styled.h1`
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  text-align: center;
+`;
+
+const LoadingScreen = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+`;
+
+const LoadingContent = styled.div`
+  text-align: center;
+`;
+
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  height: 2rem;
+  width: 2rem;
+  margin: 0 auto 1rem;
+  border-radius: 9999px;
+  border: 3px solid rgba(209, 213, 219, 0.6);
+  border-top-color: var(--primary, #6366f1);
+  animation: ${spin} 0.75s linear infinite;
+`;
+
+const LoadingMessage = styled.p`
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+`;

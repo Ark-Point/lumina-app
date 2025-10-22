@@ -1,34 +1,33 @@
 "use client";
 
+import { APP_NAME } from "@/app/miniapp/constant/mini-app";
+import styled from "@emotion/styled";
 import { useMiniApp } from "@neynar/react";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "../Button";
-import { Label } from "../label";
 import {
-  ContextCard,
   HomeContent,
   HomeLayout,
-  HomeSubtitle,
-  HomeTitle,
-  SectionStack,
   StatusMessage,
   StyledTextArea,
 } from "../components";
+import { Label } from "../label";
 
 const LLM_AGENT_URL = process.env.NEXT_PUBLIC_LLM_AGENT_URL;
 
 type ConversationEntry = {
   role: "user" | "assistant";
   content: string;
+  timestamp: string;
 };
 
 /**
  * HomeTab component displays the main landing content for the mini app.
- * 
+ *
  * This is the default tab that users see when they first open the mini app.
  * It provides a simple welcome message and placeholder content that can be
  * customized for specific use cases.
- * 
+ *
  * @example
  * ```tsx
  * <HomeTab />
@@ -36,6 +35,7 @@ type ConversationEntry = {
  */
 export function HomeTab() {
   const { context } = useMiniApp();
+  const appDisplayName = APP_NAME?.trim() || "Mini App";
 
   const [promptInput, setPromptInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -70,7 +70,11 @@ export function HomeTab() {
 
     setConversation((prev) => [
       ...prev,
-      { role: "user", content: trimmedPrompt },
+      {
+        role: "user",
+        content: trimmedPrompt,
+        timestamp: new Date().toISOString(),
+      },
     ]);
     setPromptInput("");
 
@@ -97,7 +101,11 @@ export function HomeTab() {
 
       setConversation((prev) => [
         ...prev,
-        { role: "assistant", content: reply },
+        {
+          role: "assistant",
+          content: reply,
+          timestamp: new Date().toISOString(),
+        },
       ]);
     } catch (error) {
       console.error("Failed to call LLM agent", error);
@@ -112,12 +120,84 @@ export function HomeTab() {
   return (
     <HomeLayout>
       <HomeContent>
-        <HomeTitle>Put your content here!</HomeTitle>
-        <HomeSubtitle>Powered by Neynar 🪐</HomeSubtitle>
+        {/* <HomeTitle>Put your content here!</HomeTitle> */}
+        {/* <HomeSubtitle>Powered by Neynar 🪐</HomeSubtitle> */}
 
-        <div style={{ marginTop: "1.5rem", textAlign: "left" }}>
-          <SectionStack>
+        <ChatContainer>
+          <ChatHeaderRow>
             <Label htmlFor="llm-agent-input">LLM Agent Playground</Label>
+            <ChatHint>
+              Chat with the {appDisplayName} agent in real time.
+            </ChatHint>
+          </ChatHeaderRow>
+
+          {conversation.length === 0 ? (
+            <EmptyState>
+              Start the conversation with a question about your mini app.
+            </EmptyState>
+          ) : (
+            <ChatList aria-live="polite" aria-label="Conversation">
+              {conversation.map((entry, index) => {
+                const isUser = entry.role === "user";
+                const displayName = isUser
+                  ? context?.user?.displayName ||
+                    context?.user?.username ||
+                    "You"
+                  : `${appDisplayName} Agent`;
+                const timestamp = new Date(entry.timestamp).toLocaleTimeString(
+                  [],
+                  { hour: "2-digit", minute: "2-digit" }
+                );
+                const userInitial = (
+                  context?.user?.displayName ||
+                  context?.user?.username ||
+                  "You"
+                )
+                  .charAt(0)
+                  .toUpperCase();
+                const key = `${entry.role}-${entry.timestamp}-${index}`;
+
+                const renderAvatar = () => {
+                  if (!isUser) {
+                    return (
+                      <ChatAvatar
+                        src="/miniapp/icon.png"
+                        alt={`${appDisplayName} logo`}
+                      />
+                    );
+                  }
+
+                  if (context?.user?.pfpUrl) {
+                    return (
+                      <ChatAvatar src={context.user.pfpUrl} alt="Your avatar" />
+                    );
+                  }
+
+                  return (
+                    <ChatAvatarFallback $isUser={isUser}>
+                      {userInitial}
+                    </ChatAvatarFallback>
+                  );
+                };
+
+                return (
+                  <ChatMessage key={key} $isUser={isUser}>
+                    {!isUser && renderAvatar()}
+                    <ChatBubble $isUser={isUser}>
+                      <ChatBubbleHeader $isUser={isUser}>
+                        <ChatName>{displayName}</ChatName>
+                        <ChatTimestamp>{timestamp}</ChatTimestamp>
+                      </ChatBubbleHeader>
+                      <ChatBubbleBody>{entry.content}</ChatBubbleBody>
+                    </ChatBubble>
+                    {isUser && renderAvatar()}
+                  </ChatMessage>
+                );
+              })}
+            </ChatList>
+          )}
+
+          <ChatInputArea>
             <StyledTextArea
               id="llm-agent-input"
               placeholder="Ask the agent anything…"
@@ -125,52 +205,187 @@ export function HomeTab() {
               onChange={(event) => setPromptInput(event.target.value)}
               disabled={isGenerating || !LLM_AGENT_URL}
             />
-            <Button
-              onClick={handleGenerate}
-              disabled={isGenerating || !promptInput.trim() || !LLM_AGENT_URL}
-              isLoading={isGenerating}
-            >
-              {isGenerating ? "Generating..." : "Send to Agent"}
-            </Button>
-            {!LLM_AGENT_URL && (
-              <StatusMessage style={{ color: "var(--destructive, #ef4444)" }}>
-                Configure NEXT_PUBLIC_LLM_AGENT_URL to enable the agent.
-              </StatusMessage>
-            )}
-            {agentError && (
-              <StatusMessage style={{ color: "var(--destructive, #ef4444)" }}>
-                {agentError}
-              </StatusMessage>
-            )}
-          </SectionStack>
+            <ChatActions>
+              <Button
+                onClick={handleGenerate}
+                disabled={isGenerating || !promptInput.trim() || !LLM_AGENT_URL}
+                isLoading={isGenerating}
+              >
+                {isGenerating ? "Generating..." : "Send to Agent"}
+              </Button>
+            </ChatActions>
+          </ChatInputArea>
 
-          {conversation.length > 0 && (
-            <ContextCard style={{ marginTop: "1rem" }}>
-              <SectionStack>
-                {conversation.map((entry, index) => (
-                  <div key={`${entry.role}-${index}`}>
-                    <p
-                      style={{
-                        fontWeight: 600,
-                        marginBottom: "0.25rem",
-                        color:
-                          entry.role === "user"
-                            ? "var(--primary, #6366f1)"
-                            : "inherit",
-                      }}
-                    >
-                      {entry.role === "user" ? "You" : "Agent"}
-                    </p>
-                    <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>
-                      {entry.content}
-                    </p>
-                  </div>
-                ))}
-              </SectionStack>
-            </ContextCard>
+          {!LLM_AGENT_URL && (
+            <StatusMessage style={{ color: "var(--destructive, #ef4444)" }}>
+              Configure NEXT_PUBLIC_LLM_AGENT_URL to enable the agent.
+            </StatusMessage>
           )}
-        </div>
+          {agentError && (
+            <StatusMessage style={{ color: "var(--destructive, #ef4444)" }}>
+              {agentError}
+            </StatusMessage>
+          )}
+        </ChatContainer>
       </HomeContent>
     </HomeLayout>
   );
 }
+
+const ChatContainer = styled.div`
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const ChatHeaderRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const ChatHint = styled.span`
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  color: rgba(107, 114, 128, 0.8);
+
+  .dark & {
+    color: rgba(156, 163, 175, 0.75);
+  }
+`;
+
+const EmptyState = styled.div`
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px dashed rgba(229, 231, 235, 0.9);
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: rgba(107, 114, 128, 0.9);
+
+  .dark & {
+    border-color: rgba(75, 85, 99, 0.75);
+    color: rgba(156, 163, 175, 0.8);
+  }
+`;
+
+const ChatList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const ChatMessage = styled.li<{ $isUser: boolean }>`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  justify-content: ${({ $isUser }) => ($isUser ? "flex-end" : "flex-start")};
+`;
+
+const ChatAvatar = styled.img`
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+`;
+
+const ChatAvatarFallback = styled.div<{ $isUser: boolean }>`
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+  background-color: ${({ $isUser }) =>
+    $isUser ? "var(--primary, #6366f1)" : "rgba(243, 244, 246, 0.95)"};
+  color: ${({ $isUser }) => ($isUser ? "#ffffff" : "#111827")};
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+
+  .dark & {
+    background-color: ${({ $isUser }) =>
+      $isUser
+        ? "color-mix(in srgb, #6366f1 85%, #1f2937 15%)"
+        : "rgba(31, 41, 55, 0.92)"};
+    color: rgba(229, 231, 235, 0.94);
+  }
+`;
+
+const ChatBubble = styled.div<{ $isUser: boolean }>`
+  width: min(100%, 19.5rem);
+  border-radius: 0.75rem;
+  background-color: ${({ $isUser }) =>
+    $isUser ? "var(--primary, #6366f1)" : "rgba(243, 244, 246, 0.95)"};
+  color: ${({ $isUser }) => ($isUser ? "#ffffff" : "inherit")};
+  border: 1px solid
+    ${({ $isUser }) =>
+      $isUser
+        ? "color-mix(in srgb, #6366f1 72%, #312e81 28%)"
+        : "rgba(229, 231, 235, 0.9)"};
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+
+  .dark & {
+    background-color: ${({ $isUser }) =>
+      $isUser
+        ? "color-mix(in srgb, #6366f1 80%, #312e81 20%)"
+        : "rgba(31, 41, 55, 0.92)"};
+    border-color: ${({ $isUser }) =>
+      $isUser ? "rgba(99, 102, 241, 0.65)" : "rgba(55, 65, 81, 0.85)"};
+  }
+`;
+
+const ChatBubbleHeader = styled.div<{ $isUser: boolean }>`
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.75rem 1rem 0.5rem;
+  border-bottom: 1px solid
+    ${({ $isUser }) =>
+      $isUser
+        ? "color-mix(in srgb, #4338ca 55%, transparent)"
+        : "rgba(209, 213, 219, 0.75)"};
+
+  .dark & {
+    border-color: ${({ $isUser }) =>
+      $isUser ? "rgba(129, 140, 248, 0.4)" : "rgba(55, 65, 81, 0.75)"};
+  }
+`;
+
+const ChatBubbleBody = styled.div`
+  padding: 0.75rem 1rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+`;
+
+const ChatName = styled.p`
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.875rem;
+`;
+
+const ChatTimestamp = styled.time`
+  font-size: 0.75rem;
+  color: rgba(107, 114, 128, 0.8);
+
+  .dark & {
+    color: rgba(156, 163, 175, 0.75);
+  }
+`;
+
+const ChatInputArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const ChatActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
