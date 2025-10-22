@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  lumina-app-agent:
+    build:
+      context: .
+      dockerfile: apps/llm-agent/Dockerfile
+    env_file:
+      - ./env.local
+    environment:
+      NODE_ENV: local
+      DATABASE_HOST: lumina-app-postgres
+      DATABASE_TYPE: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: devArkpoint
+      DATABASE_PASSWORD: 4JlQUcyrNHu8
+      DATABASE_NAME: lumina-app
+      DATABASE_LOGGING: false
+    ports:
+      - "8004:8004"
+    networks:
+      - miniapp-apps-net
+      - lumina-app-net
+
+  lumina-app-web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    env_file:
+      - ./env.local
+    environment:
+      NODE_ENV: local
+      NEXT_PUBLIC_LLM_AGENT_URL: lumina-app-agent
+    ports:
+      - "3000:3000"
+    networks:
+      - miniapp-apps-net
+
+networks:
+  miniapp-apps-net:
+    driver: bridge
+  lumina-app-net:
+    external: true

@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext", // 또는 "bundler"
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@lumina-app/config": ["packages/config/index.ts"],
+      "@lumina-app/redis": ["packages/redis/src/index.ts"],
+      "@lumina-app/database": ["packages/database/src/index.ts"]
+    }
+  }
+}

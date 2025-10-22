@@ -1,0 +1,31 @@
+{
+  "name": "@lumina-app/agent",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NODE_ENV=local nest start --watch",
+    "start": "cross-env NODE_ENV=local node dist/main",
+    "build": "nest build"
+  },
+  "dependencies": {
+    "@lumina-app/config": "^1.0.0",
+    "@lumina-app/database": "^1.0.0",
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/typeorm": "^11.0.0",
+    "eventsource-parser": "^1.1.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.20",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.10",
+    "@nestjs/schematics": "^11.0.7",
+    "@nestjs/testing": "^11.1.6",
+    "@types/node": "^20.17.6",
+    "typescript": "^5.9.2"
+  }
+}

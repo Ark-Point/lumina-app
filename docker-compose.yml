@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  lumina-app-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    networks:
+      - lumina-app-net
+    environment:
+      POSTGRES_USER: devArkpoint
+      POSTGRES_PASSWORD: 4JlQUcyrNHu8
+      POSTGRES_DB: lumina-app
+    ports:
+      - "5432:5432"
+    volumes:
+      - lumina-app-pgdata:/var/lib/postgresql/lumina-app/data
+  lumina-app-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - lumina-app-net
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - lumina-app-redisdata:/lumina-app-redisdata/data
+volumes:
+  lumina-app-pgdata:
+  lumina-app-redisdata:
+
+networks:
+  lumina-app-net:
+    driver: bridge
+    name: lumina-app-net
