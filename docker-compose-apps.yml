@@ -4,7 +4,7 @@ services:
   lumina-app-agent:
     build:
       context: .
-      dockerfile: apps/llm-agent/Dockerfile
+      dockerfile: apps/agent/Dockerfile
     env_file:
       - ./env.local
     environment:
@@ -30,7 +30,7 @@ services:
       - ./env.local
     environment:
       NODE_ENV: local
-      NEXT_PUBLIC_LLM_AGENT_URL: lumina-app-agent
+      NEXT_PUBLIC_LLM_AGENT_URL: https://uncuttable-izola-sinuous.ngrok-free.dev
     ports:
       - "3000:3000"
     networks:

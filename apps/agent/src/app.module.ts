@@ -1,9 +1,11 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from '@lumina-app/database';
-import { ChatModule } from './chat/chat.module';
-import { LlmModule } from './llm/llm.module';
-import { StorageModule } from './storage/storage.module';
+import { DatabaseModule } from "@lumina-app/database";
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+import { ChatModule } from "./chat/chat.module";
+import { LlmModule } from "./llm/llm.module";
+import { StorageModule } from "./storage/storage.module";
 
 @Module({
   imports: [
@@ -13,5 +15,7 @@ import { StorageModule } from './storage/storage.module';
     ChatModule,
     StorageModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

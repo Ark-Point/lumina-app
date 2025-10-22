@@ -9,7 +9,7 @@ COPY apps ./apps
 
 RUN npm ci
 
-RUN npm run build --workspace=@lumina-app/llm-agent
+RUN npm run build --workspace=@lumina-app/agent
 
 FROM node:24-alpine AS runner
 WORKDIR /app
@@ -24,4 +24,4 @@ RUN npm prune --omit=dev
 
 EXPOSE 3100
 
-CMD ["npm", "run", "start", "--workspace=@lumina-app/llm-agent"]
+CMD ["npm", "run", "start", "--workspace=@lumina-app/agent"]
