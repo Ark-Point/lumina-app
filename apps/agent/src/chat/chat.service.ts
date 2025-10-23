@@ -1,9 +1,9 @@
-import { Injectable, Logger, Optional, MessageEvent } from '@nestjs/common';
-import { Response } from 'express';
-import { interval, map, Observable } from 'rxjs';
-import { ChatMessage, ChatRequest } from './dto';
-import { LlmClient } from '../llm/llm.client';
-import { MessageRepo } from '../storage/message.repo';
+import { Injectable, Logger, MessageEvent, Optional } from "@nestjs/common";
+import { Response } from "express";
+import { interval, map, Observable } from "rxjs";
+import { LlmClient } from "../llm/llm.client";
+import { MessageRepo } from "../storage/message/message.repo";
+import { ChatMessage, ChatRequest } from "./dto";
 
 @Injectable()
 export class ChatService {
@@ -11,7 +11,7 @@ export class ChatService {
 
   constructor(
     private readonly llmClient: LlmClient,
-    @Optional() private readonly messageRepo?: MessageRepo,
+    @Optional() private readonly messageRepo?: MessageRepo
   ) {}
 
   private async prepareMessages(request: ChatRequest) {
@@ -22,7 +22,7 @@ export class ChatService {
 
     const finalMessages = [...history, ...request.messages];
     const newMessages = request.messages.filter(
-      (msg) => msg.role !== 'assistant',
+      (msg) => msg.role !== "assistant"
     );
 
     return { finalMessages, newMessages };
@@ -39,7 +39,7 @@ export class ChatService {
     await this.persistConversation(
       request.conversationId,
       newMessages,
-      result.content,
+      result.content
     );
 
     return {
@@ -48,20 +48,17 @@ export class ChatService {
     };
   }
 
-  async streamCompletion(
-    request: ChatRequest,
-    res: Response,
-  ): Promise<void> {
+  async streamCompletion(request: ChatRequest, res: Response): Promise<void> {
     const { finalMessages, newMessages } = await this.prepareMessages(request);
 
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('Connection', 'keep-alive');
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
     res.status(200);
     res.flushHeaders?.();
 
     try {
-      let accumulated = '';
+      let accumulated = "";
       const stream = this.llmClient.createCompletionStream({
         ...request,
         messages: finalMessages,
@@ -72,24 +69,24 @@ export class ChatService {
         res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
       }
 
-      res.write('data: [DONE]\n\n');
+      res.write("data: [DONE]\n\n");
       res.end();
 
       await this.persistConversation(
         request.conversationId,
         newMessages,
-        accumulated,
+        accumulated
       );
     } catch (error) {
       const err = error as Error;
       this.logger.error(
         `Streaming completion failed: ${err.message}`,
-        err.stack,
+        err.stack
       );
       res.write(
         `event: error\ndata: ${JSON.stringify({
-          message: 'Failed to stream completion',
-        })}\n\n`,
+          message: "Failed to stream completion",
+        })}\n\n`
       );
       res.end();
     }
@@ -99,14 +96,14 @@ export class ChatService {
     return interval(15000).pipe(
       map(() => ({
         data: { uptime: process.uptime() },
-      })),
+      }))
     );
   }
 
   private async persistConversation(
     conversationId: string | undefined,
     userMessages: ChatMessage[],
-    assistantReply: string,
+    assistantReply: string
   ) {
     if (
       !conversationId ||
@@ -120,7 +117,7 @@ export class ChatService {
     await this.messageRepo.saveExchange(
       conversationId,
       userMessages,
-      assistantReply,
+      assistantReply
     );
   }
 }

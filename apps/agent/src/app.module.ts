@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ChatModule } from "./chat/chat.module";
+import { CoinModule } from "./coin/coin.module";
 import { LlmModule } from "./llm/llm.module";
 import { StorageModule } from "./storage/storage.module";
 
@@ -13,6 +14,7 @@ import { StorageModule } from "./storage/storage.module";
     DatabaseModule.forRoot(),
     LlmModule,
     ChatModule,
+    CoinModule,
     StorageModule,
   ],
   controllers: [AppController],

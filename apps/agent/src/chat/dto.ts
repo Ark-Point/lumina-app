@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const ChatMessageSchema = z.object({
-  role: z.enum(['system', 'user', 'assistant']),
+  role: z.enum(["system", "user", "assistant"]),
   content: z.string(),
 });
 
@@ -15,21 +15,21 @@ export const ChatRequestSchema = z.object({
   tools: z
     .array(
       z.object({
-        type: z.literal('function'),
+        type: z.literal("function"),
         function: z.object({
           name: z.string(),
           description: z.string().optional(),
           parameters: z.any().optional(),
         }),
-      }),
+      })
     )
     .optional(),
   tool_choice: z
     .union([
-      z.literal('auto'),
-      z.literal('none'),
+      z.literal("auto"),
+      z.literal("none"),
       z.object({
-        type: z.literal('function'),
+        type: z.literal("function"),
         function: z.object({ name: z.string() }),
       }),
     ])
