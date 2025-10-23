@@ -9,9 +9,13 @@ export type UpsertCoinMetadataInput = {
   chainId: number;
   ownerAddress: string;
   name: string;
-  symbol: string;
+  symbol?: string | null;
   description?: string | null;
-  imageUrl?: string | null;
+  image?: string | null;
+  bannerImage?: string | null;
+  featuredImage?: string | null;
+  externalLink?: string | null;
+  collaborators?: string[] | null;
   properties?: Record<string, any> | null;
 };
 
@@ -29,6 +33,17 @@ export class CoinMetadataRepository {
   ): Promise<CoinMetadata | null> {
     const owner = normalizeAddress(ownerAddress);
     return this.repo.findOne({ where: { chainId, ownerAddress: owner } });
+  }
+
+  async findOneByIdAndOwner(
+    chainId: number,
+    ownerAddress: string,
+    metadataId: string
+  ): Promise<CoinMetadata | null> {
+    const owner = normalizeAddress(ownerAddress);
+    return this.repo.findOne({
+      where: { id: metadataId, chainId, ownerAddress: owner },
+    });
   }
 
   /** 최신 생성 순으로 여러 건 조회 (옵션) */
@@ -56,9 +71,13 @@ export class CoinMetadataRepository {
     if (existing) {
       this.repo.merge(existing, {
         name: data.name,
-        symbol: data.symbol,
+        symbol: data.symbol ?? null,
         description: data.description ?? null,
-        imageUrl: data.imageUrl ?? null,
+        image: data.image ?? null,
+        bannerImage: data.bannerImage ?? null,
+        featuredImage: data.featuredImage ?? null,
+        externalLink: data.externalLink ?? null,
+        collaborators: data.collaborators ?? null,
         properties: data.properties ?? null,
       });
       return this.repo.save(existing);
@@ -67,9 +86,13 @@ export class CoinMetadataRepository {
       chainId: data.chainId,
       ownerAddress: owner,
       name: data.name,
-      symbol: data.symbol,
+      symbol: data.symbol ?? null,
       description: data.description ?? null,
-      imageUrl: data.imageUrl ?? null,
+      image: data.image ?? null,
+      bannerImage: data.bannerImage ?? null,
+      featuredImage: data.featuredImage ?? null,
+      externalLink: data.externalLink ?? null,
+      collaborators: data.collaborators ?? null,
       properties: data.properties ?? null,
     });
     return this.repo.save(created);

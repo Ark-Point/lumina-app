@@ -11,7 +11,7 @@ import {
 @Unique("coin_metadata_unique_owner_per_chain", ["chainId", "ownerAddress"])
 @Entity({ name: "coin_metadata" })
 export class CoinMetadata {
-  @PrimaryGeneratedColumn("increment", { type: "bigint" })
+  @PrimaryGeneratedColumn("uuid")
   id!: string;
 
   @Column({ type: "integer" })
@@ -24,14 +24,26 @@ export class CoinMetadata {
   @Column({ type: "varchar", length: 80 })
   name!: string;
 
-  @Column({ type: "varchar", length: 11 })
-  symbol!: string;
+  @Column({ type: "varchar", length: 32, nullable: true })
+  symbol?: string | null;
 
   @Column({ type: "text", nullable: true })
   description?: string;
 
   @Column({ type: "text", nullable: true })
-  imageUrl?: string;
+  image?: string | null;
+
+  @Column({ type: "text", nullable: true, name: "banner_image" })
+  bannerImage?: string | null;
+
+  @Column({ type: "text", nullable: true, name: "featured_image" })
+  featuredImage?: string | null;
+
+  @Column({ type: "text", nullable: true, name: "external_link" })
+  externalLink?: string | null;
+
+  @Column({ type: "jsonb", nullable: true })
+  collaborators?: string[] | null;
 
   @Column({ type: "jsonb", nullable: true })
   properties?: Record<string, any>;
