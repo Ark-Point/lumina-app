@@ -27,7 +27,7 @@ export class Protocol {
   chains: string[];
 
   @Column({
-    type: 'numeric',
+    type: 'double precision',
     nullable: true,
   })
   tvl: number;
@@ -35,10 +35,10 @@ export class Protocol {
   @Column({ type: 'jsonb' })
   chainTvls: { [propertyName: string]: number };
 
-  @Column({ type: 'decimal', precision: 10, nullable: true })
+  @Column({ type: 'double precision', nullable: true })
   change_1d: number;
 
-  @Column({ type: 'decimal', precision: 10, nullable: true })
+  @Column({ type: 'double precision', nullable: true })
   change_7d: number;
 
   @CreateDateColumn()

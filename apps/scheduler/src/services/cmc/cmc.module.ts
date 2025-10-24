@@ -1,11 +1,12 @@
 import { DatabaseModule } from "@lumina-app/database";
 import { Module } from "@nestjs/common";
-import { SampleService } from "./sample.service";
+
+import { CMCService } from "./cmc.service";
 
 @Module({
   imports: [DatabaseModule],
-  providers: [SampleService],
+  providers: [CMCService],
   controllers: [],
-  exports: [SampleService],
+  exports: [CMCService],
 })
-export class SampleModule {}
+export class CMCModule {}
