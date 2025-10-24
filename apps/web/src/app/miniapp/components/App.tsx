@@ -4,7 +4,6 @@ import { Footer } from "@/app/miniapp/components/ui/Footer";
 import {
   ActionsTab,
   ChatTab,
-  ContextTab,
   WalletTab,
 } from "@/app/miniapp/components/ui/tabs";
 import { USE_WALLET } from "@/app/miniapp/constant/mini-app";
@@ -113,9 +112,7 @@ export default function App(
 
         {/* Tab content rendering */}
         {currentTab === Tab.Home && <ChatTab />}
-        {/* {currentTab === Tab.Home && <HomeTab />} */}
         {currentTab === Tab.Actions && <ActionsTab />}
-        {currentTab === Tab.Context && <ContextTab />}
         {currentTab === Tab.Wallet && <WalletTab />}
       </MainContent>
       {/* Footer with navigation */}
@@ -135,17 +132,14 @@ const SafeAreaWrapper = styled.div<{
   padding-bottom: ${({ $insets }) => `${$insets.bottom}px`};
   padding-left: ${({ $insets }) => `${$insets.left}px`};
   padding-right: ${({ $insets }) => `${$insets.right}px`};
-  background-color: blue;
+
+  background: var(--Primitive-Gray-1, #f9f9f9);
 `;
 
 const MainContent = styled.div`
   width: 100%;
-  max-width: 32rem;
-  margin: 0 auto;
-  padding: 0.5rem 1.5rem 5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
 `;
 
 const MainTitle = styled.h1`

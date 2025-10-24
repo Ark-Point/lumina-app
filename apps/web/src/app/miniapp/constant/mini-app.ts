@@ -22,14 +22,14 @@ export const APP_URL: string = process.env.NEXT_PUBLIC_MINI_APP_URL!;
  * The name of the mini app as displayed to users.
  * Used in titles, headers, and app store listings.
  */
-export const APP_NAME: string = "sample";
+export const APP_NAME: string = "Lumina";
 
 /**
  * A brief description of the mini app's functionality.
  * Used in app store listings and metadata.
  */
 export const APP_DESCRIPTION: string =
-  "A Farcaster sample mini app created by Arkpoint";
+  "Lumina mini app - Your Onchain Research Co-Pilot";
 
 /**
  * The primary category for the mini app.
@@ -41,7 +41,7 @@ export const APP_PRIMARY_CATEGORY: string = "";
  * Tags associated with the mini app.
  * Used for search and discovery in app stores.
  */
-export const APP_TAGS: string[] = ["demo"];
+export const APP_TAGS: string[] = ["demo", "mvp"];
 
 // --- Asset URLs ---
 /**

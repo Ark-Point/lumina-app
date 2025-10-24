@@ -63,19 +63,45 @@ export const SelectControl = styled.select`
   }
 `;
 
-export const HomeLayout = styled.div`
+export const ChatLayout = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  // max-height: calc(100vh - 200px);
-  padding: 0 1.5rem;
+  flex-direction: column;
+  /* align-items: center; */
+  justify-content: flex-end;
+  height: calc(100vh - 74px);
 `;
 
-export const HomeContent = styled.div`
-  width: 100%;
-  max-width: 28rem;
-  margin: 0 auto;
+export const ChatContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100vw;
+  /* max-width: 28rem; */
+  /* margin: 0 auto; */
   text-align: center;
+  /* overflow: scroll; */
+  //   /* 넘칠 때만 스크롤 */
+  overflow-y: auto; /* ← scroll 대신 auto */
+  overflow-x: hidden;
+
+  /* 스크롤바 숨기기 (크롬/사파리/엣지) */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 파이어폭스/IE 계열 호환 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge(레거시) */
+
+  /* 모바일/관성/레이아웃 보정 */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable; /* (옵션) 스크롤바 생겨도 레이아웃 안 흔들리게 */
+  min-height: 0; /* flex/grid 자식이면 필수 */
+  scroll-behavior: smooth; /* 스무스 스크롤 */
+  -webkit-overflow-scrolling: touch;
+  /* 부모가 flex/grid면 필수: 내부 overflow 작동 보정 */
+  /* min-height: 0; */
 `;
 
 export const HomeTitle = styled.p`

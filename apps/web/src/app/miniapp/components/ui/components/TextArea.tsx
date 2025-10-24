@@ -2,23 +2,33 @@ import styled from "@emotion/styled";
 
 export const StyledTextArea = styled.textarea`
   width: 100%;
-  min-height: 6.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(229, 231, 235, 0.9);
-  background-color: #ffffff;
+  min-height: 5.5rem;
+  /* border: 1px solid rgba(229, 231, 235, 0.9); */
+  border-top: 1px solid var(--Primitive-Gray-3, #dadadd);
+  /* background: var(--Primitive-White, #fff); */
+  /* background-color: red; */
   color: #111827;
-  padding: 0.75rem;
-  font-size: 0.875rem;
+  padding: 0.75rem 1rem 0.75rem 1rem;
+  font-size: 1rem;
   line-height: 1.4;
-  resize: vertical;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  resize: none;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 
-  &:focus-visible {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  /* &:focus-visible {
     outline: none;
     border-color: var(--primary, #6366f1);
     box-shadow: 0 0 0 2px
       color-mix(in srgb, var(--primary, #6366f1) 32%, transparent);
-  }
+  } */
 
   &:disabled {
     opacity: 0.55;

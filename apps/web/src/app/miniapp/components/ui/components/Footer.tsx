@@ -14,7 +14,6 @@ export const FooterWrapper = styled.div`
   // background-color: rgba(243, 244, 246, 0.95);
   border-top: 1px solid #d4d4d4;
   background: #f5f5f5;
-  // background-color: red;
   z-index: 50;
 
   .dark & {

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { baseSepolia } from "viem/chains";
 import {
@@ -9,6 +10,7 @@ import {
   useWalletClient,
 } from "wagmi";
 // ⬇️ 실제 SDK import는 Zora 문서의 패키지명을 그대로 사용하세요.
+import CreateCoinImage from "@/app/miniapp/asset/button/create-coin.png";
 import {
   createCoin,
   CreateConstants,
@@ -215,9 +217,22 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
       <button
         onClick={onClick}
         disabled={loading}
-        className="rounded px-4 py-2 border"
+        className="relative rounded px-4 py-2 border"
+        style={{
+          padding: 0,
+          border: "none",
+          background: "transparent",
+          display: "inline-flex",
+        }}
+        aria-label={loading ? "발행 중..." : "Create Coin"}
       >
-        {loading ? "발행 중..." : "Create Coin (Zora)"}
+        <Image
+          src={CreateCoinImage}
+          alt="Create Coin"
+          width={47}
+          height={47}
+          style={{ opacity: loading ? 0.6 : 1 }}
+        />
       </button>
       {txHash && (
         <div>

@@ -101,6 +101,30 @@ const globalStyles = css`
       "Segoe UI Emoji",
       "Segoe UI Symbol";
   }
+
+  @supports (-webkit-touch-callout: none) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    input,
+    textarea,
+    select,
+    button {
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+  }
+  input:focus,
+  textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4); /* 예시 */
+  }
+
   /* border & outline defaults (border-border, outline-ring/50 대체) */
   * {
     border-color: var(--border);

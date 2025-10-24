@@ -10,7 +10,9 @@ export const StyledInput = styled.input`
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 
   &::placeholder {
     color: rgba(107, 114, 128, 0.85);
