@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=local ts-node scripts/dev.ts",
+    "dev": "cross-env NODE_ENV=local next dev",
     "build": "cross-env NODE_ENV=local next build",
     "start": "cross-env NODE_ENV=production next start",
     "lint": "next lint"

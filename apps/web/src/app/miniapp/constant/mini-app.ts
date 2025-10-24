@@ -60,13 +60,13 @@ export const APP_OG_IMAGE_URL: string = `${APP_URL}/api/opengraph-image`;
  * URL for the app's splash screen image.
  * Displayed during app loading.
  */
-export const APP_SPLASH_URL: string = `${APP_URL}/splash.png`;
+export const APP_SPLASH_URL: string = `${APP_URL}/splash.svg`;
 
 /**
  * Background color for the splash screen.
  * Used as fallback when splash image is loading.
  */
-export const APP_SPLASH_BACKGROUND_COLOR: string = "#f7f7f7";
+export const APP_SPLASH_BACKGROUND_COLOR: string = "#8807ff";
 
 /**
  * Account association for the mini app.
