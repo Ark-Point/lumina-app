@@ -5,13 +5,16 @@ export const FooterWrapper = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  margin: 0 1rem 1rem;
-  padding: 0.5rem;
-  border-radius: 0.75rem;
-  border-width: 3px;
-  border-style: double;
-  border-color: var(--primary, #6366f1);
-  background-color: rgba(243, 244, 246, 0.95);
+  // margin: 0 1rem 1rem;
+  // padding: 0.5rem;
+  // border-radius: 0.75rem;
+  // border-width: 3px;
+  // border-style: double;
+  // border-color: var(--primary, #6366f1);
+  // background-color: rgba(243, 244, 246, 0.95);
+  border-top: 1px solid #d4d4d4;
+  background: #f5f5f5;
+  // background-color: red;
   z-index: 50;
 
   .dark & {
@@ -23,7 +26,8 @@ export const FooterNav = styled.nav`
   display: flex;
   align-items: center;
   justify-content: space-around;
-  height: 3.5rem;
+  // height: 3.5rem;
+  height: 74px;
   gap: 0.5rem;
 `;
 

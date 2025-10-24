@@ -1,11 +1,10 @@
 "use client";
 
 import { Footer } from "@/app/miniapp/components/ui/Footer";
-import { Header } from "@/app/miniapp/components/ui/Header";
 import {
   ActionsTab,
+  ChatTab,
   ContextTab,
-  HomeTab,
   WalletTab,
 } from "@/app/miniapp/components/ui/tabs";
 import { USE_WALLET } from "@/app/miniapp/constant/mini-app";
@@ -106,25 +105,25 @@ export default function App(
   return (
     <SafeAreaWrapper $insets={safeAreaInsets}>
       {/* Header should be full width */}
-      <Header neynarUser={neynarUser} />
+      {/* <Header neynarUser={neynarUser} /> */}
 
       {/* Main content and footer should be centered */}
       <MainContent>
         <MainTitle>{title}</MainTitle>
 
         {/* Tab content rendering */}
-        {currentTab === Tab.Home && <HomeTab />}
+        {currentTab === Tab.Home && <ChatTab />}
+        {/* {currentTab === Tab.Home && <HomeTab />} */}
         {currentTab === Tab.Actions && <ActionsTab />}
         {currentTab === Tab.Context && <ContextTab />}
         {currentTab === Tab.Wallet && <WalletTab />}
-
-        {/* Footer with navigation */}
-        <Footer
-          activeTab={currentTab as Tab}
-          setActiveTab={setActiveTab}
-          showWallet={USE_WALLET}
-        />
       </MainContent>
+      {/* Footer with navigation */}
+      <Footer
+        activeTab={currentTab as Tab}
+        setActiveTab={setActiveTab}
+        showWallet={USE_WALLET}
+      />
     </SafeAreaWrapper>
   );
 }
@@ -136,6 +135,7 @@ const SafeAreaWrapper = styled.div<{
   padding-bottom: ${({ $insets }) => `${$insets.bottom}px`};
   padding-left: ${({ $insets }) => `${$insets.left}px`};
   padding-right: ${({ $insets }) => `${$insets.right}px`};
+  background-color: blue;
 `;
 
 const MainContent = styled.div`
