@@ -13,7 +13,7 @@ import {
   useConnect,
   WagmiProvider,
 } from "wagmi";
-import { base, celo, degen, mainnet, optimism, unichain } from "wagmi/chains";
+import { baseSepolia } from "wagmi/chains";
 import { coinbaseWallet, metaMask } from "wagmi/connectors";
 
 // Custom hook for Coinbase Wallet detection and auto-connection
@@ -51,14 +51,9 @@ function useCoinbaseWalletAutoConnect() {
 }
 
 export const config = createConfig({
-  chains: [base, optimism, mainnet, degen, unichain, celo],
+  chains: [baseSepolia],
   transports: {
-    [base.id]: http(),
-    [optimism.id]: http(),
-    [mainnet.id]: http(),
-    [degen.id]: http(),
-    [unichain.id]: http(),
-    [celo.id]: http(),
+    [baseSepolia.id]: http(),
   },
   connectors: [
     farcasterFrame(),

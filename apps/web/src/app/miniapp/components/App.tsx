@@ -12,6 +12,7 @@ import { USE_WALLET } from "@/app/miniapp/constant/mini-app";
 import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
 import { useMiniApp } from "@neynar/react";
+import { setApiKey } from "@zoralabs/coins-sdk";
 import { useEffect } from "react";
 import { useNeynarUser } from "../hooks/useNeynarUser";
 
@@ -62,6 +63,8 @@ export default function App(
   // --- Hooks ---
   const { isSDKLoaded, context, setInitialTab, setActiveTab, currentTab } =
     useMiniApp();
+
+  setApiKey(process.env.NEXT_PUBLIC_ZORA_API_KEY);
 
   // --- Neynar user hook ---
   const { user: neynarUser } = useNeynarUser(context || undefined);

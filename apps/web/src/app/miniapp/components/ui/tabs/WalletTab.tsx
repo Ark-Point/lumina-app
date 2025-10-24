@@ -15,10 +15,8 @@ import {
 
 import { renderError } from "@/app/miniapp/lib/errorUtils";
 import { truncateAddress } from "@/app/miniapp/lib/truncateAddress";
-import { base, degen, mainnet, optimism, unichain } from "wagmi/chains";
+import { baseSepolia } from "wagmi/chains";
 import { Button } from "../Button";
-import { SendEth } from "../wallet/SendEth";
-import { SignEvmMessage } from "../wallet/SignEvmMessage";
 import {
   ButtonStack,
   InfoStack,
@@ -27,6 +25,8 @@ import {
   SectionStack,
   TabContainer,
 } from "../components/Tabs";
+import { SendEth } from "../wallet/SendEth";
+import { SignEvmMessage } from "../wallet/SignEvmMessage";
 
 import { APP_NAME, USE_WALLET } from "@/app/miniapp/constant/mini-app";
 import { useMiniApp } from "@neynar/react";
@@ -102,16 +102,12 @@ function ConnectionControls({
   disconnect,
 }: ConnectionControlsProps) {
   if (isConnected) {
-    return (
-      <Button onClick={() => disconnect()}>Disconnect</Button>
-    );
+    return <Button onClick={() => disconnect()}>Disconnect</Button>;
   }
   if (context) {
     return (
       <SectionStack>
-        <Button
-          onClick={() => connect({ connector: connectors[0] })}
-        >
+        <Button onClick={() => connect({ connector: connectors[0] })}>
           Connect (Auto)
         </Button>
         <Button
@@ -131,14 +127,10 @@ function ConnectionControls({
   }
   return (
     <ButtonStack>
-      <Button
-        onClick={() => connect({ connector: connectors[1] })}
-      >
+      <Button onClick={() => connect({ connector: connectors[1] })}>
         Connect Coinbase Wallet
       </Button>
-      <Button
-        onClick={() => connect({ connector: connectors[2] })}
-      >
+      <Button onClick={() => connect({ connector: connectors[2] })}>
         Connect MetaMask
       </Button>
     </ButtonStack>
@@ -241,17 +233,7 @@ export function WalletTab() {
    * Cycles through: Base → Optimism → Degen → Mainnet → Unichain → Base
    */
   const nextChain = useMemo(() => {
-    if (chainId === base.id) {
-      return optimism;
-    } else if (chainId === optimism.id) {
-      return degen;
-    } else if (chainId === degen.id) {
-      return mainnet;
-    } else if (chainId === mainnet.id) {
-      return unichain;
-    } else {
-      return base;
-    }
+    return baseSepolia;
   }, [chainId]);
 
   // --- Handlers ---
@@ -345,7 +327,9 @@ export function WalletTab() {
             <InfoStack>
               <InfoText>
                 Hash:{" "}
-                <InlineCode>{truncateAddress(evmContractTransactionHash)}</InlineCode>
+                <InlineCode>
+                  {truncateAddress(evmContractTransactionHash)}
+                </InlineCode>
               </InfoText>
               <InfoText>
                 Status:{" "}

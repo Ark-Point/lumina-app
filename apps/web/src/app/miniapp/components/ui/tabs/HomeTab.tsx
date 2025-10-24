@@ -4,6 +4,7 @@ import { APP_NAME } from "@/app/miniapp/constant/mini-app";
 import styled from "@emotion/styled";
 import { useMiniApp } from "@neynar/react";
 import { useCallback, useMemo, useState } from "react";
+import { useAccount } from "wagmi";
 import { Button } from "../Button";
 import {
   HomeContent,
@@ -11,6 +12,7 @@ import {
   StatusMessage,
   StyledTextArea,
 } from "../components";
+import { CreateCoinButton } from "../components/coin/create/button";
 import { Label } from "../label";
 
 const LLM_AGENT_URL = process.env.NEXT_PUBLIC_LLM_AGENT_URL;
@@ -35,6 +37,7 @@ type ConversationEntry = {
  */
 export function HomeTab() {
   const { context } = useMiniApp();
+  const { address } = useAccount();
   const appDisplayName = APP_NAME?.trim() || "Mini App";
 
   const [promptInput, setPromptInput] = useState("");
@@ -180,6 +183,21 @@ export function HomeTab() {
                   );
                 };
 
+                const data = new Object() as Record<string, string>;
+                conversation.forEach((conversation) => {
+                  if (conversation.role === "user") {
+                    Object.assign(data, {
+                      question: conversation.content,
+                      timestamp: conversation.timestamp,
+                    });
+                  } else if (conversation.role === "assistant") {
+                    Object.assign(data, {
+                      agentAnswer: conversation.content,
+                      timestamp: conversation.timestamp,
+                    });
+                  }
+                });
+
                 return (
                   <ChatMessage key={key} $isUser={isUser}>
                     {!isUser && renderAvatar()}
@@ -189,6 +207,14 @@ export function HomeTab() {
                         <ChatTimestamp>{timestamp}</ChatTimestamp>
                       </ChatBubbleHeader>
                       <ChatBubbleBody>{entry.content}</ChatBubbleBody>
+                      {!isUser && (
+                        <CreateCoinButton
+                          name={`${context?.user?.username ?? address} Lumina research`}
+                          symbol={`LUM${context?.user?.username?.slice(2, 4).toLocaleUpperCase() ?? address?.slice(2, 4).toLocaleUpperCase()}`}
+                          description={`Lumina Q&A Token by ${context?.user?.username ?? address}`}
+                          properties={data}
+                        />
+                      )}
                     </ChatBubble>
                     {isUser && renderAvatar()}
                   </ChatMessage>
