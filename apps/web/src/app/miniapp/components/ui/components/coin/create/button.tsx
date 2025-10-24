@@ -24,6 +24,9 @@ export interface CreateCoinMetadata {
   properties: Record<string, string>;
   image?: string;
 }
+
+const LLM_AGENT_URL = process.env.NEXT_PUBLIC_LLM_AGENT_URL;
+
 export function CreateCoinButton(metadata: CreateCoinMetadata) {
   const { address, chainId, isConnected } = useAccount();
   const publicClient = usePublicClient({ chainId: baseSepolia.id }); // viem PublicClient
@@ -34,15 +37,63 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
   const [txHash, setTxHash] = useState<string>();
   const [coinAddress, setCoinAddress] = useState<`0x${string}`>();
 
+  const ensureUniqueSymbol = async (baseSymbol: string): Promise<string> => {
+    if (!LLM_AGENT_URL) {
+      return baseSymbol;
+    }
+
+    const symbolPattern = /^LUM(\d+)([A-Za-z]*)$/;
+    let currentSymbol = baseSymbol.trim().toUpperCase();
+    let attempts = 0;
+
+    while (attempts < 50) {
+      try {
+        const params = new URLSearchParams({
+          chainId: baseSepolia.id.toString(),
+          symbol: currentSymbol,
+        });
+        const response = await fetch(
+          `${LLM_AGENT_URL}/api/coin/symbol/availability?${params.toString()}`
+        );
+
+        if (!response.ok) {
+          console.warn("Symbol availability check failed:", response.status);
+          return currentSymbol;
+        }
+
+        const result = await response.json();
+        const available =
+          typeof result?.data?.available === "boolean"
+            ? result.data.available
+            : result?.available;
+
+        if (available === true) {
+          return currentSymbol;
+        }
+      } catch (error) {
+        console.error("Error checking symbol availability:", error);
+        return currentSymbol;
+      }
+
+      const match = currentSymbol.match(symbolPattern);
+      if (!match) {
+        // If the symbol does not follow the expected pattern, append a number.
+        currentSymbol = `${currentSymbol}1`;
+        attempts += 1;
+        continue;
+      }
+
+      const [, numericPart, suffix] = match;
+      const nextNumber = (parseInt(numericPart, 10) + 1).toString();
+      currentSymbol = `LUM${nextNumber}${suffix}`;
+      attempts += 1;
+    }
+
+    return currentSymbol;
+  };
+
   const onClick = async () => {
     try {
-      console.log(`
-            address=${address}\n
-            chainId=${chainId}\n
-            isConnected=${isConnected}\n
-            `);
-      console.log("publicClient: ", publicClient);
-      console.log("walletClient: ", walletClient);
       if (!isConnected || !address) throw new Error("Wallet not connected.");
       if (chainId !== baseSepolia.id) {
         // 체인 스위치 유도 (지갑에서 승인)
@@ -51,25 +102,34 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
       if (!publicClient || !walletClient)
         throw new Error("client initialize Failed... ");
 
+      const uniqueSymbol = await ensureUniqueSymbol(metadata.symbol);
+      const workingMetadata: CreateCoinMetadata = {
+        ...metadata,
+        symbol: uniqueSymbol,
+      };
+
       setLoading(true);
 
       let createdMetadata = undefined;
-      if (metadata?.image) {
-        const image = await fetch(metadata?.image);
-        const blob = await image.blob();
+      if (!!workingMetadata?.image) {
+        // const image = await fetch(metadata?.image);
+        const appIcon = await fetch("/miniapp/icon.png");
+
+        // const blob = await image.blob();
+        const blob = await appIcon.blob();
 
         const { createMetadataParameters } = await createMetadataBuilder()
-          .withName(metadata.name)
-          .withSymbol(metadata.symbol)
-          .withDescription(metadata.description)
+          .withName(workingMetadata.name)
+          .withSymbol(workingMetadata.symbol)
+          .withDescription(workingMetadata.description)
           .withImage(
             new File(
               [/* data for png as bytes or file from user */ blob],
-              `${metadata.symbol}.png`,
+              `${workingMetadata.symbol}.png`,
               { type: "image/png" }
             )
           )
-          .withProperties(metadata.properties)
+          .withProperties(workingMetadata.properties)
           .upload(createZoraUploaderForCreator(address as Address));
         createdMetadata = createMetadataParameters.metadata;
       } else {
@@ -77,17 +137,17 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
         const blob = await appIcon.blob();
 
         const { createMetadataParameters } = await createMetadataBuilder()
-          .withName(metadata.name)
-          .withSymbol(metadata.symbol)
-          .withDescription(metadata.description)
+          .withName(workingMetadata.name)
+          .withSymbol(workingMetadata.symbol)
+          .withDescription(workingMetadata.description)
           .withImage(
             new File(
               [/* data for png as bytes or file from user */ blob],
-              `${metadata.symbol}.png`,
+              `${workingMetadata.symbol}.png`,
               { type: "image/png" }
             )
           )
-          .withProperties(metadata.properties)
+          .withProperties(workingMetadata.properties)
           .upload(createZoraUploaderForCreator(address as Address));
         createdMetadata = createMetadataParameters.metadata;
       }
@@ -98,8 +158,8 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
       const res = await createCoin({
         call: {
           creator: address as `0x${string}`,
-          name: metadata.name,
-          symbol: metadata.symbol,
+          name: workingMetadata.name,
+          symbol: workingMetadata.symbol,
           metadata: createdMetadata,
           currency: CreateConstants.ContentCoinCurrencies.ETH, // Base Sepolia는 ETH
           chainId: baseSepolia.id,
@@ -107,14 +167,41 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
         },
         walletClient, // wagmi -> viem WalletClient
         publicClient, // wagmi -> viem PublicClient
+        // options: {
+        //   skipValidateTransaction: true
+        // }
       });
 
       // SDK가 반환하는 형태에 맞춰 파싱 (문서 예시대로)
       setTxHash(res?.hash);
       setCoinAddress(res?.address);
 
-      // 여기서 서버에 배포 결과 기록 (POST /coins/deploy 등)
-      // await fetch('/api/coins/deploy', { method:'POST', ... })
+      if (LLM_AGENT_URL && res?.hash && res?.address) {
+        const payload = {
+          chainId: baseSepolia.id,
+          ownerAddress: address,
+          txHash: res.hash,
+          coinAddress: res.address,
+          factory: "zora-factory" as const,
+          name: workingMetadata.name,
+          symbol: workingMetadata.symbol,
+        };
+
+        const result = await fetch(`${LLM_AGENT_URL}/api/coin/deployments`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }).catch((postError) => {
+          console.error("Failed to record deployment:", postError);
+        });
+        console.log(result);
+      } else if (!LLM_AGENT_URL) {
+        console.warn(
+          "LLM_AGENT_URL is not configured; skipping deployment log."
+        );
+      }
     } catch (e: any) {
       console.error(e);
       alert(e.message ?? "createCoin 실패");
