@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAccount, useChainId, useConnect, useDisconnect } from "wagmi";
 
 import { AccountLayout, TabContainer } from "../components/Tabs";
@@ -8,7 +8,8 @@ import { AccountLayout, TabContainer } from "../components/Tabs";
 import { silkscreen } from "@/app/fonts/silkscreen";
 import LeftIcon from "@/app/miniapp/asset/profile/profile_left_asset.svg";
 import RightIcon from "@/app/miniapp/asset/profile/profile_right_asset.svg";
-import { USE_WALLET } from "@/app/miniapp/constant/mini-app";
+import { APP_URL, USE_WALLET } from "@/app/miniapp/constant/mini-app";
+import { useNeynarUsersQuery } from "@/app/miniapp/hooks/useNeynarUsersQuery";
 import styled from "@emotion/styled";
 import { useMiniApp } from "@neynar/react";
 import Image from "next/image";
@@ -48,6 +49,20 @@ export function AccountTab() {
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
 
+  const userFid = useMemo(
+    () => (context?.user?.fid ? [context?.user?.fid] : undefined),
+    [context]
+  );
+
+  const { data: farcasterUsersInfo } = useNeynarUsersQuery(userFid);
+
+  const farcasterUserInfo = useMemo(
+    () => farcasterUsersInfo?.findLast((user) => user) ?? undefined,
+    [farcasterUsersInfo]
+  );
+
+  console.log("farcasterUsersInfo: ", farcasterUsersInfo);
+  console.log("address:", address);
   // --- Effects ---
   /**
    * Auto-connect when Farcaster context is available.
@@ -81,17 +96,24 @@ export function AccountTab() {
       console.log("- In Farcaster client:", isInFarcasterClient);
 
       // Use the first connector (farcasterFrame) for auto-connection
+      console.log(context.user);
+      console.log(context);
       try {
         connect({ connector: connectors[0] });
       } catch (error) {
         console.error("Auto-connection failed:", error);
       }
     } else {
-      console.log("Auto-connection conditions not met:");
-      console.log("- Has context:", !!context?.user?.fid);
-      console.log("- Is connected:", isConnected);
-      console.log("- Has connectors:", connectors.length > 0);
-      console.log("- In Farcaster client:", isInFarcasterClient);
+      // console.log("Auto-connection conditions not met:");
+      // console.log("- Has context:", !!context?.user?.fid);
+      // console.log("- Is connected:", isConnected);
+      // console.log("- Has connectors:", connectors.length > 0);
+      // console.log("- In Farcaster client:", isInFarcasterClient);
+      try {
+        connect({ connector: connectors[2] });
+      } catch (error) {
+        console.error("Auto-connection failed:", error);
+      }
     }
   }, [context?.user?.fid, isConnected, connectors, connect, context?.client]);
 
@@ -173,7 +195,140 @@ export function AccountTab() {
             <Image src={RightIcon} alt="" width={60} height={26} />
           </AccountTitleRightIconWrapper>
         </AccountTitleWrapper>
-        <AccountCard></AccountCard>
+        <AccountCard>
+          {!userFid && isConnected && address ? (
+            <AccountUserWrapper>
+              <Label
+                className={silkscreen.className}
+                style={{
+                  color: `var(--Primitive-Gray-9, #16161D)`,
+                  textAlign: `start`,
+                  // fontFamily: `Pretendard`,
+                  fontSize: `0.95rem`,
+                  fontStyle: `normal`,
+                  fontWeight: 600,
+                  lineHeight: `normal`,
+                  maxWidth: `180px`,
+                  overflowWrap: "break-word",
+                }}
+              >
+                {address}
+              </Label>
+            </AccountUserWrapper>
+          ) : (
+            <AccountUserWrapper>
+              <Label
+                className={silkscreen.className}
+                style={{
+                  color: `var(--Primitive-Gray-9, #16161D)`,
+                  textAlign: `start`,
+                  // fontFamily: `Pretendard`,
+                  fontSize: `0.95rem`,
+                  fontStyle: `normal`,
+                  fontWeight: 600,
+                  lineHeight: `normal`,
+                  maxWidth: `180px`,
+                  overflowWrap: "break-word",
+                }}
+              >
+                {farcasterUserInfo?.display_name ?? "Loading..."}
+              </Label>
+              <Label
+                // className={silkscreen.className}
+                style={{
+                  color: `var(--Primitive-Gray-9, #747480)`,
+                  textAlign: `center`,
+                  fontFamily: `Pretendard`,
+                  fontSize: `0.75rem`,
+                  fontStyle: `normal`,
+                  fontWeight: 600,
+                  lineHeight: `normal`,
+                }}
+              >
+                {farcasterUserInfo?.username
+                  ? `@${farcasterUserInfo?.username}`
+                  : ""}
+              </Label>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  padding: "0.25rem 0",
+                }}
+              >
+                <Label
+                  className={silkscreen.className}
+                  style={{
+                    color: `var(--Primitive-Gray-9, #747480)`,
+                    textAlign: `center`,
+                    // fontFamily: `Pretendard`,
+                    fontSize: `0.5rem`,
+                    fontStyle: `normal`,
+                    fontWeight: 400,
+                    lineHeight: `normal`,
+                    marginRight: "0.25rem",
+                  }}
+                >
+                  {`${farcasterUserInfo?.follower_count ?? 0} followers`}
+                </Label>
+                <Label
+                  className={silkscreen.className}
+                  style={{
+                    color: `var(--Primitive-Gray-9, #747480)`,
+                    textAlign: `center`,
+                    // fontFamily: `Pretendard`,
+                    fontSize: `0.5rem`,
+                    fontStyle: `normal`,
+                    fontWeight: 400,
+                    lineHeight: `normal`,
+                  }}
+                >
+                  {`${farcasterUserInfo?.following_count ?? 0} following`}
+                </Label>
+              </div>
+              {farcasterUserInfo?.profile?.bio?.text && (
+                <Label
+                  className={silkscreen.className}
+                  style={{
+                    color: `var(--Primitive-Purple-6, #8807FF)`,
+                    textAlign: "start",
+                    // fontFamily: `Pretendard`,
+                    fontSize: `0.5rem`,
+                    fontStyle: `normal`,
+                    fontWeight: 400,
+                    lineHeight: `normal`,
+                    maxWidth: `180px`,
+                    whiteSpace: "normal",
+                    overflowWrap: `break-word` /* 단어는 웬만하면 보존 */,
+                    hyphens: `auto`,
+                  }}
+                >
+                  {`${farcasterUserInfo?.profile?.bio?.text ?? ""} `}
+                </Label>
+              )}
+            </AccountUserWrapper>
+          )}
+
+          <AccountProfile
+            src={`${farcasterUserInfo?.pfp_url ?? `${APP_URL}/icon.png`}`}
+            alt=""
+
+            // $profile={`${farcasterUserInfo?.pfp_url ?? APP_ICON_URL}`}
+          >
+            {/* <Image
+              src={`${farcasterUserInfo?.pfp_url ?? "/icon.png"}`}
+              alt=""
+              // fill
+              // sizes="5rem"
+              unoptimized
+              style={{
+                objectFit: "fill",
+                maxWidth: "5rem",
+                maxHeight: "5rem",
+              }}
+            /> */}
+          </AccountProfile>
+        </AccountCard>
         <ScoreAndRewardWrapper></ScoreAndRewardWrapper>
         <AccountCoinListCard></AccountCoinListCard>
       </AccountLayout>
@@ -218,7 +373,7 @@ const AccountTitleRightIconWrapper = styled.div`
 
 const AccountCard = styled.div`
   display: flex;
-  padding: 1.25rem 1rem;
+  padding: 1rem 1.25rem;
   justify-content: space-between;
   align-items: flex-start;
   /* align-self: stretch; */
@@ -226,7 +381,21 @@ const AccountCard = styled.div`
   border: 1px solid var(--Primitive-Purple-6, #8807ff);
   background: var(--Primitive-Purple-1, #f4f0ff);
   margin: 0 0 0.625rem 0;
-  height: 80px;
+  /* height: 80px; */
+`;
+const AccountUserWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+`;
+
+const AccountProfile = styled.img`
+  width: 4.625rem;
+  height: 4.625rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
 `;
 
 const ScoreAndRewardWrapper = styled.div`
