@@ -109,10 +109,14 @@ export function AccountTab() {
       // console.log("- Is connected:", isConnected);
       // console.log("- Has connectors:", connectors.length > 0);
       // console.log("- In Farcaster client:", isInFarcasterClient);
-      try {
-        connect({ connector: connectors[2] });
-      } catch (error) {
-        console.error("Auto-connection failed:", error);
+      if (!isInFarcasterClient && !isConnected) {
+        console.log("isInFarcasterClient: ", isInFarcasterClient);
+        console.log("isConnected: ", isConnected);
+        try {
+          connect({ connector: connectors[2] });
+        } catch (error) {
+          console.error("Auto-connection failed:", error);
+        }
       }
     }
   }, [context?.user?.fid, isConnected, connectors, connect, context?.client]);
@@ -312,24 +316,74 @@ export function AccountTab() {
           <AccountProfile
             src={`${farcasterUserInfo?.pfp_url ?? `${APP_URL}/icon.png`}`}
             alt=""
-
-            // $profile={`${farcasterUserInfo?.pfp_url ?? APP_ICON_URL}`}
-          >
-            {/* <Image
-              src={`${farcasterUserInfo?.pfp_url ?? "/icon.png"}`}
-              alt=""
-              // fill
-              // sizes="5rem"
-              unoptimized
-              style={{
-                objectFit: "fill",
-                maxWidth: "5rem",
-                maxHeight: "5rem",
-              }}
-            /> */}
-          </AccountProfile>
+          />
         </AccountCard>
-        <ScoreAndRewardWrapper></ScoreAndRewardWrapper>
+        <ScoreAndRewardWrapper>
+          <ScoreCard>
+            <ScoreWrapper>
+              <Label
+                // className={silkscreen.className}
+                style={{
+                  color: `var(--Primitive-Gray-7, #42424D)`,
+                  textAlign: "start",
+                  fontFamily: `Pretendard`,
+                  fontSize: `1rem`,
+                  fontStyle: `normal`,
+                  fontWeight: 600,
+                  lineHeight: `normal`,
+                }}
+              >
+                Agent Score
+              </Label>
+              <Label
+                // className={silkscreen.className}
+                style={{
+                  color: `var(--Primitive-Gray-9, #16161D)`,
+                  textAlign: "start",
+                  fontFamily: `Pretendard`,
+                  fontSize: `1.175rem`,
+                  fontStyle: `normal`,
+                  fontWeight: 600,
+                  lineHeight: `normal`,
+                }}
+              >
+                0
+              </Label>
+            </ScoreWrapper>
+          </ScoreCard>
+          <RewardCard>
+            <RewardWrapper>
+              <Label
+                // className={silkscreen.className}
+                style={{
+                  color: `var(--Primitive-Gray-7, #42424D)`,
+                  textAlign: "start",
+                  fontFamily: `Pretendard`,
+                  fontSize: `1rem`,
+                  fontStyle: `normal`,
+                  fontWeight: 600,
+                  lineHeight: `normal`,
+                }}
+              >
+                Rewards Earned
+              </Label>
+              <Label
+                // className={silkscreen.className}
+                style={{
+                  color: `var(--Primitive-Gray-9, #16161D)`,
+                  textAlign: "start",
+                  fontFamily: `Pretendard`,
+                  fontSize: `1.175rem`,
+                  fontStyle: `normal`,
+                  fontWeight: 600,
+                  lineHeight: `normal`,
+                }}
+              >
+                0.000 ETH
+              </Label>
+            </RewardWrapper>
+          </RewardCard>
+        </ScoreAndRewardWrapper>
         <AccountCoinListCard></AccountCoinListCard>
       </AccountLayout>
     </TabContainer>
@@ -347,7 +401,6 @@ const AccountTitleWrapper = styled.div`
   display: flex;
   padding: 0.25rem 1rem 0 0;
   align-items: flex-end;
-  /* background-color: red; */
   margin: 1.75rem 3.5rem 1rem 2rem;
 `;
 
@@ -356,7 +409,6 @@ const AccountTitleLeftIconWrapper = styled.div`
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  /* background-color: blue; */
   padding-bottom: 0.75rem;
   padding-right: 0.875rem;
 `;
@@ -366,7 +418,6 @@ const AccountTitleRightIconWrapper = styled.div`
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  /* background-color: blue; */
   padding-bottom: 0.75rem;
   padding-left: 0.875rem;
 `;
@@ -376,12 +427,10 @@ const AccountCard = styled.div`
   padding: 1rem 1.25rem;
   justify-content: space-between;
   align-items: flex-start;
-  /* align-self: stretch; */
   border-radius: 8px;
   border: 1px solid var(--Primitive-Purple-6, #8807ff);
   background: var(--Primitive-Purple-1, #f4f0ff);
   margin: 0 0 0.625rem 0;
-  /* height: 80px; */
 `;
 const AccountUserWrapper = styled.div`
   display: flex;
@@ -400,12 +449,59 @@ const AccountProfile = styled.img`
 
 const ScoreAndRewardWrapper = styled.div`
   display: flex;
-  align-items: center;
+  /* align-items: center; */
+  justify-content: space-between;
   gap: 1rem;
-  align-self: stretch;
-  background-color: red;
+  /* align-self: stretch; */
+  /* background-color: red; */
   height: 90px;
   margin: 0 0 0.625rem 0;
+`;
+
+const ScoreCard = styled.div`
+  display: flex;
+  padding: 1rem 1.25rem 1rem 1.25rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  /* gap: 0.125rem; */
+  /* align-self: stretch; */
+  border-radius: 8px;
+  border: 1px solid var(--Primitive-Gray-4, #babac0);
+  background: var(--Primitive-White, #fff);
+  /* margin: 0 0 0.625rem 0; */
+  flex: 1;
+`;
+
+const ScoreWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: flex-start;
+  justify-content: space-between;
+`;
+
+const RewardCard = styled.div`
+  display: flex;
+  padding: 1rem 1.25rem 1rem 1.25rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+
+  /* gap: 0.125rem; */
+  /* align-self: stretch; */
+  border-radius: 8px;
+  border: 1px solid var(--Primitive-Gray-4, #babac0);
+  background: var(--Primitive-White, #fff);
+  flex: 1;
+`;
+
+const RewardWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: flex-start;
+  justify-content: space-between;
 `;
 
 const AccountCoinListCard = styled.div`
