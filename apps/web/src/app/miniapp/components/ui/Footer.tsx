@@ -22,8 +22,8 @@ export const Footer: React.FC<FooterProps> = ({
     <FooterNav>
       <FooterButton
         type="button"
-        isActive={activeTab === Tab.Home}
-        onClick={() => setActiveTab(Tab.Home)}
+        isActive={activeTab === Tab.Chat}
+        onClick={() => setActiveTab(Tab.Chat)}
       >
         <span aria-hidden="true">
           <Image src={ChatIcon} alt="" width={24} height={24} />
@@ -31,8 +31,11 @@ export const Footer: React.FC<FooterProps> = ({
       </FooterButton>
       <FooterButton
         type="button"
-        isActive={activeTab === Tab.Actions}
-        onClick={() => setActiveTab(Tab.Actions)}
+        isActive={false}
+        disabled={true}
+        onClick={() => {
+          alert("Not Available yet ...");
+        }}
       >
         <span aria-hidden="true">
           <Image src={RankingIcon} alt="" width={24} height={24} />
@@ -49,8 +52,8 @@ export const Footer: React.FC<FooterProps> = ({
       {showWallet && (
         <FooterButton
           type="button"
-          isActive={activeTab === Tab.Wallet}
-          onClick={() => setActiveTab(Tab.Wallet)}
+          isActive={activeTab === Tab.Account}
+          onClick={() => setActiveTab(Tab.Account)}
         >
           <span aria-hidden="true">
             <Image src={UserIcon} alt="" width={24} height={24} />

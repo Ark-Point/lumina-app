@@ -63,6 +63,14 @@ export const SelectControl = styled.select`
   }
 `;
 
+export const AccountLayout = styled.div`
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  justify-content: flex-start;
+  height: calc(100vh - 74px);
+`;
+
 export const ChatLayout = styled.div`
   display: flex;
   flex-direction: column;

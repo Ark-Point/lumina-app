@@ -33,7 +33,8 @@ export const FooterNav = styled.nav`
 export const FooterButton = styled.button<{ isActive?: boolean }>`
   appearance: none;
   border: none;
-  background: transparent;
+  /* background: transparent; */
+  background: ${({ isActive }) => (isActive ? "" : "transparent")};
   padding: 0;
   cursor: pointer;
   width: 100%;
@@ -53,10 +54,10 @@ export const FooterButton = styled.button<{ isActive?: boolean }>`
     font-size: 1.25rem;
   }
 
-  .dark & {
+  /* .dark & {
     color: ${({ isActive }) =>
-      isActive
-        ? "color-mix(in srgb, var(--primary, #6366f1) 80%, #ffffff 20%)"
-        : "rgba(156, 163, 175, 0.8)"};
-  }
+    isActive
+      ? "color-mix(in srgb, var(--primary, #6366f1) 80%, #ffffff 20%)"
+      : "rgba(156, 163, 175, 0.8)"};
+  } */
 `;

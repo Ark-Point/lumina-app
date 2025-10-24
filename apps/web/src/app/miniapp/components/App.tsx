@@ -2,9 +2,9 @@
 
 import { Footer } from "@/app/miniapp/components/ui/Footer";
 import {
+  AccountTab,
   ActionsTab,
   ChatTab,
-  WalletTab,
 } from "@/app/miniapp/components/ui/tabs";
 import { USE_WALLET } from "@/app/miniapp/constant/mini-app";
 import { keyframes } from "@emotion/react";
@@ -16,10 +16,12 @@ import { useNeynarUser } from "../hooks/useNeynarUser";
 
 // --- Types ---
 export enum Tab {
-  Home = "home",
+  // Home = "home",
+  Chat = "chat",
   Actions = "actions",
-  Context = "context",
+  // Context = "context",
   Wallet = "wallet",
+  Account = "account",
 }
 
 export interface AppProps {
@@ -77,7 +79,7 @@ export default function App(
    */
   useEffect(() => {
     if (isSDKLoaded) {
-      setInitialTab(Tab.Home);
+      setInitialTab(Tab.Chat);
     }
   }, [isSDKLoaded, setInitialTab]);
 
@@ -111,9 +113,10 @@ export default function App(
         <MainTitle>{title}</MainTitle>
 
         {/* Tab content rendering */}
-        {currentTab === Tab.Home && <ChatTab />}
+        {currentTab === Tab.Chat && <ChatTab />}
         {currentTab === Tab.Actions && <ActionsTab />}
-        {currentTab === Tab.Wallet && <WalletTab />}
+        {/* {currentTab === Tab.Wallet && <WalletTab />} */}
+        {currentTab === Tab.Account && <AccountTab />}
       </MainContent>
       {/* Footer with navigation */}
       <Footer
