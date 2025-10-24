@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { baseSepolia } from "viem/chains";
 import {
   useAccount,
+  useConnect,
   usePublicClient,
   useSwitchChain,
   useWalletClient,
@@ -31,6 +32,7 @@ const LLM_AGENT_URL = process.env.NEXT_PUBLIC_LLM_AGENT_URL;
 
 export function CreateCoinButton(metadata: CreateCoinMetadata) {
   const { address, chainId, isConnected } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
   const publicClient = usePublicClient({ chainId: baseSepolia.id }); // viem PublicClient
   const { data: walletClient } = useWalletClient({ chainId: baseSepolia.id }); // viem WalletClient
   const { switchChain } = useSwitchChain();
@@ -94,7 +96,13 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
     return currentSymbol;
   };
 
-  const onClick = async () => {
+  const connectWallet = useCallback(async () => {
+    if (!isConnected) {
+      connect({ connector: connectors[2] });
+    }
+  }, [isConnected, publicClient, walletClient, chainId]);
+
+  const onClick = useCallback(async () => {
     try {
       if (!isConnected || !address) throw new Error("Wallet not connected.");
       if (chainId !== baseSepolia.id) {
@@ -210,13 +218,13 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isConnected, publicClient, walletClient, chainId]);
 
   return (
     <div className="space-y-2">
       <button
-        onClick={onClick}
-        disabled={loading}
+        onClick={isConnected ? onClick : connectWallet}
+        disabled={loading || isPending}
         className="relative rounded px-4 py-2 border"
         style={{
           padding: 0,
