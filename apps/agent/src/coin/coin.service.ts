@@ -5,6 +5,7 @@ import { CoinDeployment } from "src/storage/coin/coin-deployment.entity";
 import { CoinDeploymentRepository } from "src/storage/coin/coin-deployment.repo";
 import {
   CoinDeploymentResponse,
+  DeploymentQueryInput,
   RecordDeploymentInput,
   SymbolAvailabilityQuery,
 } from "./dto";
@@ -59,6 +60,18 @@ export class CoinService extends BaseService {
     );
     this.logger.debug(`[${this.isSymbolAvailable.name}] available: ${!taken}`);
     return { available: !taken };
+  }
+
+  async listDeployments(
+    query: DeploymentQueryInput
+  ): Promise<CoinDeploymentResponse[]> {
+    const ownerAddress = query.ownerAddress.toLowerCase();
+    const items = await this.coinDeploymentRepo.listByOwner(ownerAddress, {
+      chainId: query.chainId,
+      limit: query.limit,
+      offset: query.offset,
+    });
+    return items.map((item) => this.mapDeployment(item));
   }
 
   private mapDeployment(entity: CoinDeployment): CoinDeploymentResponse {

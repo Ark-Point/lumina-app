@@ -31,6 +31,17 @@ export type SymbolAvailabilityQuery = z.infer<
   typeof SymbolAvailabilityQuerySchema
 >;
 
+export const DeploymentQuerySchema = z.object({
+  ownerAddress: z
+    .string()
+    .regex(addressRegex, "ownerAddress must be a valid hex address"),
+  chainId: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(200).optional(),
+  offset: z.coerce.number().int().nonnegative().optional(),
+});
+
+export type DeploymentQueryInput = z.infer<typeof DeploymentQuerySchema>;
+
 export type CoinDeploymentResponse = {
   id: string;
   chainId: number;

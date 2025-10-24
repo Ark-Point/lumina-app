@@ -9,6 +9,7 @@ import { silkscreen } from "@/app/fonts/silkscreen";
 import LeftIcon from "@/app/miniapp/asset/profile/profile_left_asset.svg";
 import RightIcon from "@/app/miniapp/asset/profile/profile_right_asset.svg";
 import { APP_URL, USE_WALLET } from "@/app/miniapp/constant/mini-app";
+import { useCoinDeployments } from "@/app/miniapp/hooks/useCoinDeployments";
 import { useNeynarUsersQuery } from "@/app/miniapp/hooks/useNeynarUsersQuery";
 import styled from "@emotion/styled";
 import { useMiniApp } from "@neynar/react";
@@ -47,7 +48,7 @@ export function AccountTab() {
   const chainId = useChainId();
 
   const { disconnect } = useDisconnect();
-  const { connect, connectors } = useConnect();
+  const { connect, connectors, isPending } = useConnect();
 
   const userFid = useMemo(
     () => (context?.user?.fid ? [context?.user?.fid] : undefined),
@@ -61,8 +62,12 @@ export function AccountTab() {
     [farcasterUsersInfo]
   );
 
-  console.log("farcasterUsersInfo: ", farcasterUsersInfo);
-  console.log("address:", address);
+  const {
+    data: coinDeployments,
+    isLoading: isCoinLoading,
+    error: coinError,
+  } = useCoinDeployments(address);
+
   // --- Effects ---
   /**
    * Auto-connect when Farcaster context is available.
@@ -96,8 +101,7 @@ export function AccountTab() {
       console.log("- In Farcaster client:", isInFarcasterClient);
 
       // Use the first connector (farcasterFrame) for auto-connection
-      console.log(context.user);
-      console.log(context);
+
       try {
         connect({ connector: connectors[0] });
       } catch (error) {
@@ -110,8 +114,8 @@ export function AccountTab() {
       // console.log("- Has connectors:", connectors.length > 0);
       // console.log("- In Farcaster client:", isInFarcasterClient);
       if (!isInFarcasterClient && !isConnected) {
-        console.log("isInFarcasterClient: ", isInFarcasterClient);
-        console.log("isConnected: ", isConnected);
+        // console.log("isInFarcasterClient: ", isInFarcasterClient);
+        // console.log("isConnected: ", isConnected);
         try {
           connect({ connector: connectors[2] });
         } catch (error) {
@@ -129,53 +133,6 @@ export function AccountTab() {
   // --- Render ---
   return (
     <TabContainer>
-      {/* {isConnected && (
-        <>
-          <SendEth />
-          <Button
-            onClick={sendEvmContractTransaction}
-            disabled={!isConnected || isEvmTransactionPending}
-            isLoading={isEvmTransactionPending}
-          >
-            Send Transaction (contract)
-          </Button>
-          {isEvmTransactionError && renderError(evmTransactionError)}
-          {evmContractTransactionHash && (
-            <InfoStack>
-              <InfoText>
-                Hash:{" "}
-                <InlineCode>
-                  {truncateAddress(evmContractTransactionHash)}
-                </InlineCode>
-              </InfoText>
-              <InfoText>
-                Status:{" "}
-                {isEvmTransactionConfirming
-                  ? "Confirming..."
-                  : isEvmTransactionConfirmed
-                    ? "Confirmed!"
-                    : "Pending"}
-              </InfoText>
-            </InfoStack>
-          )}
-          <Button
-            onClick={signTyped}
-            disabled={!isConnected || isEvmSignTypedDataPending}
-            isLoading={isEvmSignTypedDataPending}
-          >
-            Sign Typed Data
-          </Button>
-          {isEvmSignTypedDataError && renderError(evmSignTypedDataError)}
-          <Button
-            onClick={handleSwitchChain}
-            disabled={isChainSwitchPending}
-            isLoading={isChainSwitchPending}
-          >
-            Switch to {nextChain.name}
-          </Button>
-          {isChainSwitchError && renderError(chainSwitchError)}
-        </>
-      )} */}
       <AccountLayout>
         <AccountTitleWrapper>
           <AccountTitleLeftIconWrapper>
@@ -322,28 +279,28 @@ export function AccountTab() {
           <ScoreCard>
             <ScoreWrapper>
               <Label
-                // className={silkscreen.className}
+                className={silkscreen.className}
                 style={{
                   color: `var(--Primitive-Gray-7, #42424D)`,
                   textAlign: "start",
-                  fontFamily: `Pretendard`,
-                  fontSize: `1rem`,
+                  // fontFamily: `Pretendard`,
+                  fontSize: `0.875rem`,
                   fontStyle: `normal`,
-                  fontWeight: 600,
+                  fontWeight: 400,
                   lineHeight: `normal`,
                 }}
               >
                 Agent Score
               </Label>
               <Label
-                // className={silkscreen.className}
+                className={silkscreen.className}
                 style={{
                   color: `var(--Primitive-Gray-9, #16161D)`,
                   textAlign: "start",
-                  fontFamily: `Pretendard`,
+                  // fontFamily: `Pretendard`,
                   fontSize: `1.175rem`,
                   fontStyle: `normal`,
-                  fontWeight: 600,
+                  fontWeight: 400,
                   lineHeight: `normal`,
                 }}
               >
@@ -354,28 +311,28 @@ export function AccountTab() {
           <RewardCard>
             <RewardWrapper>
               <Label
-                // className={silkscreen.className}
+                className={silkscreen.className}
                 style={{
                   color: `var(--Primitive-Gray-7, #42424D)`,
                   textAlign: "start",
-                  fontFamily: `Pretendard`,
-                  fontSize: `1rem`,
+                  // fontFamily: `Pretendard`,
+                  fontSize: `0.875rem`,
                   fontStyle: `normal`,
-                  fontWeight: 600,
+                  fontWeight: 400,
                   lineHeight: `normal`,
                 }}
               >
                 Rewards Earned
               </Label>
               <Label
-                // className={silkscreen.className}
+                className={silkscreen.className}
                 style={{
                   color: `var(--Primitive-Gray-9, #16161D)`,
                   textAlign: "start",
-                  fontFamily: `Pretendard`,
+                  // fontFamily: `Pretendard`,
                   fontSize: `1.175rem`,
                   fontStyle: `normal`,
-                  fontWeight: 600,
+                  fontWeight: 400,
                   lineHeight: `normal`,
                 }}
               >
@@ -384,7 +341,56 @@ export function AccountTab() {
             </RewardWrapper>
           </RewardCard>
         </ScoreAndRewardWrapper>
-        <AccountCoinListCard></AccountCoinListCard>
+        <AccountCoinListCard>
+          <TokenCardHeader>
+            <TokenCardTitle className={silkscreen.className}>
+              Your Tokenized Knowledge
+            </TokenCardTitle>
+            {/* {coinDeployments} */}
+            {/* <TokenAccentBar /> */}
+          </TokenCardHeader>
+          {!address ? (
+            <TokenEmptyMessage>
+              Connect your wallet to view tokenized knowledge.
+            </TokenEmptyMessage>
+          ) : isCoinLoading ? (
+            // <TokenEmptyMessage>Loading your tokens…</TokenEmptyMessage>
+            <TokenAccentBar />
+          ) : coinError ? (
+            <TokenEmptyMessage>
+              Failed to load tokens: {coinError.message}
+            </TokenEmptyMessage>
+          ) : coinDeployments && coinDeployments.length > 0 ? (
+            <TokenTable className={silkscreen.className}>
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                {coinDeployments.map((deployment) => (
+                  <tr key={deployment.id}>
+                    <td>{deployment.symbol ?? "—"}</td>
+                    <td>
+                      <a
+                        href={`https://sepolia.basescan.org/address/${deployment.coinAddress}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {deployment.coinAddress}
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </TokenTable>
+          ) : (
+            <TokenEmptyMessage className={silkscreen.className}>
+              No tokenized knowledge yet.
+            </TokenEmptyMessage>
+          )}
+        </AccountCoinListCard>
       </AccountLayout>
     </TabContainer>
   );
@@ -506,15 +512,98 @@ const RewardWrapper = styled.div`
 
 const AccountCoinListCard = styled.div`
   display: flex;
-  padding: 20px 16px 12px 16px;
+  padding: 1.25rem;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  /* align-self: stretch; */
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid var(--Primitive-Gray-4, #babac0);
   background: var(--Primitive-White, #fff);
   margin: 0 0 0.625rem 0;
-  height: 245px;
+  gap: 0.75rem;
+`;
+
+const TokenCardHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+`;
+
+const TokenCardTitle = styled.p`
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: normal;
+  font-style: normal;
+  text-align: center;
+  color: var(--Primitive-Purple-6, #8807ff);
+`;
+
+const TokenAccentBar = styled.div`
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(136, 7, 255, 0.3),
+    rgba(136, 7, 255, 0.3) 10px,
+    rgba(161, 76, 246, 0.3) 10px,
+    rgba(161, 76, 246, 0.3) 20px
+  );
+`;
+
+const TokenTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.875rem;
+  background: #fff;
+  /* background: red; */
+  /* box-shadow: 0 8px 24px rgba(34, 0, 92, 0.12); */
+
+  thead {
+    /* background: rgba(136, 7, 255, 0.08); */
+    background: var(--Primitive-Gray-1, #f9f9f9);
+  }
+
+  th,
+  td {
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+  }
+
+  th {
+    font-weight: 400;
+    /* font-family: Pretendard; */
+    text-align: center;
+    color: var(--Primitive-Gray-9, #16161d);
+    font-size: 0.85rem;
+  }
+
+  td {
+    border-top: 1px solid rgba(186, 117, 255, 0.25);
+    color: #42424d;
+    word-break: break-all;
+  }
+
+  tbody tr:hover td {
+    background: rgba(244, 240, 255, 0.65);
+  }
+
+  a {
+    color: #6366f1;
+    text-decoration: none;
+  }
+`;
+
+const TokenEmptyMessage = styled.p`
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #61616b;
+  padding: 1rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px dashed rgba(186, 117, 255, 0.5);
 `;

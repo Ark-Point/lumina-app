@@ -109,18 +109,18 @@ export class CoinDeploymentRepository {
     });
   }
 
-  /** 소유자 기준 목록 조회 */
+  /** 소유자 기준 목록 조회 (체인 옵션) */
   async listByOwner(
-    chainId: number,
     ownerAddress: string,
-    limit = 50,
-    offset = 0
+    { chainId, limit = 50, offset = 0 }: { chainId?: number; limit?: number; offset?: number } = {}
   ) {
     const owner = normalizeAddress(ownerAddress);
     const where: FindOptionsWhere<CoinDeployment> = {
-      chainId,
       ownerAddress: owner,
     };
+    if (typeof chainId === "number") {
+      where.chainId = chainId;
+    }
     return this.repo.find({
       where,
       order: { createdAt: "DESC" },

@@ -9,6 +9,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CoinService } from "./coin.service";
 import {
+  DeploymentQuerySchema,
   RecordDeploymentSchema,
   SymbolAvailabilityQuerySchema,
 } from "./dto";
@@ -71,6 +72,33 @@ export class CoinController {
     return {
       statusCode: 200,
       data: result,
+    };
+  }
+
+  @Get("deployments")
+  @ApiOperation({
+    summary: "List coin deployments by owner",
+    description:
+      "Retrieve coin deployments filtered by owner address and optional chain.",
+  })
+  @ApiResponse({ status: 200, description: "Deployment list" })
+  async listDeployments(@Query() query: Record<string, string | string[]>) {
+    const normalizedQuery = Object.fromEntries(
+      Object.entries(query).map(([key, value]) => [
+        key,
+        Array.isArray(value) ? value[value.length - 1] : value,
+      ])
+    );
+
+    const parsed = DeploymentQuerySchema.safeParse(normalizedQuery);
+    if (!parsed.success) {
+      throw new BadRequestException(parsed.error.format());
+    }
+
+    const deployments = await this.coinService.listDeployments(parsed.data);
+    return {
+      statusCode: 200,
+      data: deployments,
     };
   }
 }

@@ -69,6 +69,23 @@ export const AccountLayout = styled.div`
   /* align-items: center; */
   justify-content: flex-start;
   height: calc(100vh - 74px);
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge(legacy) */
+
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  min-height: 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 `;
 
 export const ChatLayout = styled.div`
@@ -87,29 +104,23 @@ export const ChatContent = styled.div`
   /* max-width: 28rem; */
   /* margin: 0 auto; */
   text-align: center;
-  /* overflow: scroll; */
-  //   /* 넘칠 때만 스크롤 */
-  overflow-y: auto; /* ← scroll 대신 auto */
+
+  overflow-y: auto;
   overflow-x: hidden;
 
-  /* 스크롤바 숨기기 (크롬/사파리/엣지) */
   &::-webkit-scrollbar {
     display: none;
   }
 
-  /* 파이어폭스/IE 계열 호환 */
   scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge(레거시) */
+  -ms-overflow-style: none; /* IE/Edge(legacy) */
 
-  /* 모바일/관성/레이아웃 보정 */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable; /* (옵션) 스크롤바 생겨도 레이아웃 안 흔들리게 */
-  min-height: 0; /* flex/grid 자식이면 필수 */
-  scroll-behavior: smooth; /* 스무스 스크롤 */
+  scrollbar-gutter: stable;
+  min-height: 0;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  /* 부모가 flex/grid면 필수: 내부 overflow 작동 보정 */
-  /* min-height: 0; */
 `;
 
 export const HomeTitle = styled.p`

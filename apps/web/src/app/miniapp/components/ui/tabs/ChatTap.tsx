@@ -145,6 +145,15 @@ export function ChatTab() {
     const threshold = 60;
     isUserScrollingRef.current = distanceFromBottom > threshold;
   }, []);
+  const renderLogo = () => {
+    return (
+      <img
+        src="/miniapp/opengraph-image.png"
+        // alt={`${appDisplayName} logo`}
+        style={{ width: "12rem", height: "6rem", alignSelf: "center" }}
+      />
+    );
+  };
 
   return (
     <ChatLayout>
@@ -170,11 +179,13 @@ export function ChatTab() {
                   Welcome!
                 </Label>
               </ChatWelcomeTitleWrapper>
+              {renderLogo()}
               <Label
+                className={silkscreen.className}
                 style={{
                   color: `var(--Primitive-Gray-9, #16161D)`,
                   textAlign: `center`,
-                  fontFamily: "Pretendard",
+                  // fontFamily: "Pretendard",
                   fontSize: `1.125rem`,
                   fontStyle: `normal`,
                   fontWeight: 600,
@@ -185,10 +196,11 @@ export function ChatTab() {
                 Lumina Agent
               </Label>
               <Label
+                className={silkscreen.className}
                 style={{
                   color: `var(--Primitive-Gray-6, #747480)`,
                   textAlign: `center`,
-                  fontFamily: `Pretendard`,
+                  // fontFamily: `Pretendard`,
                   fontSize: `0.75rem`,
                   fontStyle: `normal`,
                   fontWeight: 400,
