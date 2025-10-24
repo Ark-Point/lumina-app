@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { BaseService } from "src/base.service";
 import { CommonResponseDto } from "src/common/dto/response/common-response.dto";
-import { CoinMetadataRepository } from "src/storage/coin/coin-metadata.repo";
 import { CoinMetadata } from "src/storage/coin/coin-metadata.entity";
+import { CoinMetadataRepository } from "src/storage/coin/coin-metadata.repo";
 import {
   CoinMetadataResponse,
   ConversationEntry,
@@ -54,10 +54,7 @@ export class CoinService extends BaseService {
       ...(existing?.properties ?? {}),
       question: conversationEntry.question,
       agentAnswer: conversationEntry.agentAnswer,
-      conversations: this.buildConversationHistory(
-        existing,
-        conversationEntry
-      ),
+      conversations: this.buildConversationHistory(existing, conversationEntry),
     };
 
     const metadata = await this.coinMetadataRepo.upsert({
@@ -100,12 +97,11 @@ export class CoinService extends BaseService {
     ownerAddress,
     metadataId,
   }: GetMetadataParams): Promise<CoinMetadataResponse> {
-    const metadata =
-      await this.coinMetadataRepo.findOneByIdAndOwner(
-        chainId,
-        ownerAddress.toLowerCase(),
-        metadataId
-      );
+    const metadata = await this.coinMetadataRepo.findOneByIdAndOwner(
+      chainId,
+      ownerAddress.toLowerCase(),
+      metadataId
+    );
 
     if (!metadata) {
       throw new NotFoundException(
@@ -113,7 +109,19 @@ export class CoinService extends BaseService {
       );
     }
 
-    return this.mapToResponse(metadata);
+    const data = this.mapToResponse(metadata);
+
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    // this.logger.debug(`[${this.getMetadata.name}] keys : `, keys);
+    // this.logger.debug(`[${this.getMetadata.name}] values : `, values);
+
+    const result = new Object();
+    for (const [index, key] of keys.entries()) {
+      if (data[key] === null) continue;
+      Object.assign(result, { [key]: data[key] });
+    }
+    return result as CoinMetadataResponse;
   }
 
   private mapToResponse(entity: CoinMetadata): CoinMetadataResponse {

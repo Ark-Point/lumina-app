@@ -3,17 +3,45 @@ import {
   Body,
   Controller,
   Get,
+  Head,
+  Options,
   Param,
   Post,
   Query,
+  Req,
+  Res,
 } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import type { Response } from "express";
 import { CoinService } from "./coin.service";
 import {
   GetMetadataParamsSchema,
   ListMetadataQuerySchema,
   RecordMetadataSchema,
 } from "./dto";
+
+function sendEmptyOk(res: Response) {
+  res.writeHead(200, {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+  });
+  res.end("");
+}
+
+function sendJsonExact(res: Response, status: number, body: unknown) {
+  const payload = typeof body === "string" ? body : JSON.stringify(body);
+
+  res.writeHead(status, {
+    "Content-Type": "application/json",
+    // "Cache-Control": "public, max-age=31536000, immutable",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+  });
+  res.end(payload);
+}
 
 @ApiTags("coin")
 @Controller("coin")
@@ -85,17 +113,28 @@ export class CoinController {
     description: "Retrieve a single metadata record for the provided owner.",
   })
   @ApiResponse({ status: 200, description: "Metadata detail" })
-  async getMetadata(@Param() params: Record<string, string>) {
+  async getMetadata(
+    @Param() params: Record<string, string>,
+    @Req() req: Request,
+    @Res() res: any
+  ) {
     const parsed = GetMetadataParamsSchema.safeParse(params);
     if (!parsed.success) {
       throw new BadRequestException(parsed.error.format());
     }
 
     const metadata = await this.coinService.getMetadata(parsed.data);
-    // return {
-    //   statusCode: 200,
-    //   data: metadata,
-    // };
-    return metadata;
+
+    return sendJsonExact(res, 200, metadata);
+  }
+
+  @Head("metadata/:chainId/:ownerAddress/:metadataId")
+  headOk(@Res() res: Response) {
+    return sendEmptyOk(res);
+  }
+
+  @Options("metadata/:chainId/:ownerAddress/:metadataId")
+  optionsOk(@Res() res: Response) {
+    return sendEmptyOk(res);
   }
 }
