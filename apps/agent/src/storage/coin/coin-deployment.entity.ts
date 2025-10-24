@@ -3,11 +3,8 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { CoinMetadata } from "./coin-metadata.entity";
 
 export type DeploymentStatus = "pending" | "success" | "failed";
 
@@ -33,6 +30,13 @@ export class CoinDeployment {
   @Column({ type: "varchar", length: 32 })
   factory!: "zora-factory" | "oz-erc20";
 
+  @Column({ type: "varchar", length: 80, nullable: true })
+  name?: string | null;
+
+  @Index("idx_coin_deploy_symbol")
+  @Column({ type: "varchar", length: 32, nullable: true })
+  symbol?: string | null;
+
   @Index("idx_coin_deploy_status")
   @Column({ type: "varchar", length: 16, default: "pending" })
   status!: DeploymentStatus;
@@ -45,16 +49,4 @@ export class CoinDeployment {
 
   @Column({ type: "timestamptz", name: "confirmed_at", nullable: true })
   confirmedAt?: Date;
-
-  /** Optional: 메타데이터 관계 (체인+오너) */
-  @ManyToOne(() => CoinMetadata, {
-    onDelete: "RESTRICT",
-    onUpdate: "CASCADE",
-    nullable: false,
-  })
-  @JoinColumn([
-    { name: "chain_id", referencedColumnName: "chainId" as any },
-    { name: "owner_address", referencedColumnName: "ownerAddress" as any },
-  ])
-  metadata!: CoinMetadata;
 }

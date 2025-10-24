@@ -1,177 +1,77 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { BaseService } from "src/base.service";
 import { CommonResponseDto } from "src/common/dto/response/common-response.dto";
-import { CoinMetadata } from "src/storage/coin/coin-metadata.entity";
-import { CoinMetadataRepository } from "src/storage/coin/coin-metadata.repo";
+import { CoinDeployment } from "src/storage/coin/coin-deployment.entity";
+import { CoinDeploymentRepository } from "src/storage/coin/coin-deployment.repo";
 import {
-  CoinMetadataResponse,
-  ConversationEntry,
-  GetMetadataParams,
-  ListMetadataQuery,
-  RecordMetadataInput,
+  CoinDeploymentResponse,
+  RecordDeploymentInput,
+  SymbolAvailabilityQuery,
 } from "./dto";
 
 @Injectable()
 export class CoinService extends BaseService {
-  constructor(private readonly coinMetadataRepo: CoinMetadataRepository) {
+  constructor(private readonly coinDeploymentRepo: CoinDeploymentRepository) {
     super();
   }
+
   healthCheck() {
     const statusCode = 200;
     this.logger.debug(`[${this.healthCheck.name}] ${statusCode}`);
     return (new CommonResponseDto().statusCode = statusCode);
   }
 
-  async recordQuestionAndAnswer(
-    input: RecordMetadataInput
-  ): Promise<CoinMetadataResponse> {
+  async recordDeployment(
+    input: RecordDeploymentInput
+  ): Promise<CoinDeploymentResponse> {
     const ownerAddress = input.ownerAddress.toLowerCase();
-    const question = input.question.trim();
-    const agentAnswer = input.agentAnswer.trim();
-    const description = this.normalizeOptionalString(input.description);
-    const symbol = this.normalizeOptionalString(input.symbol);
-    const image = this.normalizeOptionalString(input.image);
-    const bannerImage = this.normalizeOptionalString(input.bannerImage);
-    const featuredImage = this.normalizeOptionalString(input.featuredImage);
-    const externalLink = this.normalizeOptionalString(input.externalLink);
-    const collaborators =
-      input.collaborators && input.collaborators.length > 0
-        ? input.collaborators.map((address) => address.toLowerCase())
-        : null;
+    const factory = input.factory ?? "zora-factory";
+    const name = this.normalizeOptionalString(input.name);
+    const symbol = this.normalizeOptionalString(input.symbol)?.toUpperCase();
 
-    const existing = await this.coinMetadataRepo.findOneByOwner(
-      input.chainId,
-      ownerAddress
-    );
-
-    const conversationEntry: ConversationEntry = {
-      question,
-      agentAnswer,
-      timestamp: new Date().toISOString(),
-    };
-
-    const properties = {
-      ...(existing?.properties ?? {}),
-      question: conversationEntry.question,
-      agentAnswer: conversationEntry.agentAnswer,
-      conversations: this.buildConversationHistory(existing, conversationEntry),
-    };
-
-    const metadata = await this.coinMetadataRepo.upsert({
+    const deployment = await this.coinDeploymentRepo.recordDeployment({
       chainId: input.chainId,
       ownerAddress,
-      name: input.name,
+      txHash: input.txHash,
+      coinAddress: input.coinAddress,
+      factory,
+      name,
       symbol,
-      description,
-      image,
-      bannerImage,
-      featuredImage,
-      externalLink,
-      collaborators,
-      properties,
     });
 
-    return this.mapToResponse(metadata);
+    return this.mapDeployment(deployment);
   }
 
-  async listMetadata(
-    query: ListMetadataQuery
-  ): Promise<CoinMetadataResponse[]> {
-    const limit = query.limit ?? 50;
-    const offset = query.offset ?? 0;
-
-    const items = await this.coinMetadataRepo.findMany(
-      {
-        chainId: query.chainId,
-        ownerAddress: query.ownerAddress?.toLowerCase(),
-      },
-      limit,
-      offset
-    );
-
-    return items.map((item) => this.mapToResponse(item));
-  }
-
-  async getMetadata({
+  async isSymbolAvailable({
     chainId,
-    ownerAddress,
-    metadataId,
-  }: GetMetadataParams): Promise<CoinMetadataResponse> {
-    const metadata = await this.coinMetadataRepo.findOneByIdAndOwner(
+    symbol,
+  }: SymbolAvailabilityQuery): Promise<{ available: boolean }> {
+    const normalizedSymbol = symbol.trim().toUpperCase();
+    if (!normalizedSymbol) {
+      return { available: true };
+    }
+    const taken = await this.coinDeploymentRepo.isSymbolTaken(
       chainId,
-      ownerAddress.toLowerCase(),
-      metadataId
+      normalizedSymbol
     );
-
-    if (!metadata) {
-      throw new NotFoundException(
-        `Metadata not found for chainId ${chainId}, owner ${ownerAddress}, metadataId ${metadataId}`
-      );
-    }
-
-    const data = this.mapToResponse(metadata);
-
-    const keys = Object.keys(data);
-    const values = Object.values(data);
-    // this.logger.debug(`[${this.getMetadata.name}] keys : `, keys);
-    // this.logger.debug(`[${this.getMetadata.name}] values : `, values);
-
-    const result = new Object();
-    for (const [index, key] of keys.entries()) {
-      if (data[key] === null) continue;
-      Object.assign(result, { [key]: data[key] });
-    }
-    return result as CoinMetadataResponse;
+    return { available: !taken };
   }
 
-  private mapToResponse(entity: CoinMetadata): CoinMetadataResponse {
+  private mapDeployment(entity: CoinDeployment): CoinDeploymentResponse {
     return {
       id: entity.id,
       chainId: entity.chainId,
       ownerAddress: entity.ownerAddress,
-      name: entity.name,
-      symbol: entity.symbol,
-      description: entity.description ?? null,
-      image: entity.image ?? null,
-      bannerImage: entity.bannerImage ?? null,
-      featuredImage: entity.featuredImage ?? null,
-      externalLink: entity.externalLink ?? null,
-      collaborators: entity.collaborators ?? null,
-      properties: entity.properties ?? null,
+      txHash: entity.txHash,
+      coinAddress: entity.coinAddress,
+      factory: entity.factory,
+      name: entity.name ?? null,
+      symbol: entity.symbol ?? null,
+      status: entity.status,
+      errorMessage: entity.errorMessage ?? null,
       createdAt: entity.createdAt.toISOString(),
-      updatedAt: entity.updatedAt.toISOString(),
+      confirmedAt: entity.confirmedAt ? entity.confirmedAt.toISOString() : null,
     };
-  }
-
-  private buildConversationHistory(
-    existing: CoinMetadata | null,
-    latest: ConversationEntry
-  ): ConversationEntry[] {
-    const rawEntries = Array.isArray(existing?.properties?.conversations)
-      ? (existing?.properties?.conversations as ConversationEntry[])
-      : [];
-
-    const sanitized = rawEntries
-      .filter(
-        (entry) =>
-          entry &&
-          typeof entry.question === "string" &&
-          typeof entry.agentAnswer === "string"
-      )
-      .map((entry) => ({
-        question: entry.question,
-        agentAnswer: entry.agentAnswer,
-        timestamp:
-          typeof entry.timestamp === "string"
-            ? entry.timestamp
-            : new Date().toISOString(),
-      }));
-
-    const combined = [...sanitized, latest];
-    const MAX_HISTORY = 50;
-    return combined.length > MAX_HISTORY
-      ? combined.slice(combined.length - MAX_HISTORY)
-      : combined;
   }
 
   private normalizeOptionalString(value?: string | null): string | null {

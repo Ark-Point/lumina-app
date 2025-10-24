@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { FindOptionsWhere, Repository } from "typeorm";
 
-import { normalizeAddress } from "../..//utils/evm";
+import { normalizeAddress } from "../../utils/evm";
 import { CoinDeployment } from "./coin-deployment.entity";
 
 type CreateDeploymentInput = {
@@ -11,6 +11,8 @@ type CreateDeploymentInput = {
   txHash: string; // 0x + 64
   coinAddress: string; // 0x + 40
   factory: "zora-factory" | "oz-erc20";
+  name?: string | null;
+  symbol?: string | null;
 };
 
 @Injectable()
@@ -33,11 +35,56 @@ export class CoinDeploymentRepository {
       txHash: tx,
       coinAddress: coin,
       factory: input.factory,
+      name: input.name ?? null,
+      symbol: input.symbol ?? null,
       status: "pending",
       errorMessage: null,
       confirmedAt: null,
     });
     return this.repo.save(entity);
+  }
+
+  async recordDeployment(
+    input: CreateDeploymentInput & { confirmedAt?: Date }
+  ): Promise<CoinDeployment> {
+    const owner = normalizeAddress(input.ownerAddress);
+    const coin = normalizeAddress(input.coinAddress);
+    const tx = input.txHash.toLowerCase();
+    if (!/^0x[0-9a-f]{64}$/.test(tx)) throw new Error("invalid txHash");
+
+    const existing = await this.findByTx(input.chainId, tx);
+
+    const normalizedSymbol =
+      typeof input.symbol === "string"
+        ? input.symbol.trim().toUpperCase() || null
+        : null;
+    const normalizedName =
+      typeof input.name === "string" ? input.name.trim() || null : null;
+
+    if (existing) {
+      existing.coinAddress = coin;
+      existing.factory = input.factory;
+      existing.name = normalizedName;
+      existing.symbol = normalizedSymbol;
+      existing.status = "success";
+      existing.errorMessage = null;
+      existing.confirmedAt = input.confirmedAt ?? new Date();
+      return this.repo.save(existing);
+    }
+
+    const created = this.repo.create({
+      chainId: input.chainId,
+      ownerAddress: owner,
+      txHash: tx,
+      coinAddress: coin,
+      factory: input.factory,
+      name: normalizedName,
+      symbol: normalizedSymbol,
+      status: "success",
+      errorMessage: null,
+      confirmedAt: input.confirmedAt ?? new Date(),
+    });
+    return this.repo.save(created);
   }
 
   /** txHash로 1건 조회 */
@@ -108,5 +155,14 @@ export class CoinDeploymentRepository {
     rec.errorMessage = reason.slice(0, 2000);
     rec.confirmedAt = rec.confirmedAt ?? null;
     return this.repo.save(rec);
+  }
+
+  async isSymbolTaken(chainId: number, symbol: string): Promise<boolean> {
+    const normalized = symbol.trim().toUpperCase();
+    if (!normalized) return false;
+    const existing = await this.repo.findOne({
+      where: { chainId, symbol: normalized },
+    });
+    return Boolean(existing);
   }
 }
