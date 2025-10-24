@@ -54,6 +54,10 @@ export class CoinService extends BaseService {
       chainId,
       normalizedSymbol
     );
+    this.logger.debug(
+      `[${this.isSymbolAvailable.name}] params:\n \tchainId:${chainId}\n \tsymbol:${symbol}`
+    );
+    this.logger.debug(`[${this.isSymbolAvailable.name}] available: ${!taken}`);
     return { available: !taken };
   }
 

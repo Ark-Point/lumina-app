@@ -40,67 +40,91 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
   const [loading, setLoading] = useState(false);
   const [txHash, setTxHash] = useState<string>();
   const [coinAddress, setCoinAddress] = useState<`0x${string}`>();
+  const [showModal, setShowModal] = useState(false);
 
-  const ensureUniqueSymbol = async (baseSymbol: string): Promise<string> => {
-    if (!LLM_AGENT_URL) {
-      return baseSymbol;
-    }
-
-    const symbolPattern = /^LUM(\d+)([A-Za-z]*)$/;
-    let currentSymbol = baseSymbol.trim().toUpperCase();
-    let attempts = 0;
-
-    while (attempts < 50) {
-      try {
-        const params = new URLSearchParams({
-          chainId: baseSepolia.id.toString(),
-          symbol: currentSymbol,
-        });
-        const response = await fetch(
-          `${LLM_AGENT_URL}/api/coin/symbol/availability?${params.toString()}`
-        );
-
-        if (!response.ok) {
-          console.warn("Symbol availability check failed:", response.status);
-          return currentSymbol;
-        }
-
-        const result = await response.json();
-        const available =
-          typeof result?.data?.available === "boolean"
-            ? result.data.available
-            : result?.available;
-
-        if (available === true) {
-          return currentSymbol;
-        }
-      } catch (error) {
-        console.error("Error checking symbol availability:", error);
-        return currentSymbol;
+  const ensureUniqueSymbol = useCallback(
+    async (baseSymbol: string): Promise<string> => {
+      if (!LLM_AGENT_URL) {
+        return baseSymbol;
       }
 
-      const match = currentSymbol.match(symbolPattern);
-      if (!match) {
-        // If the symbol does not follow the expected pattern, append a number.
-        currentSymbol = `${currentSymbol}1`;
+      const symbolPattern = /^LUM(\d+)([A-Za-z]*)$/;
+      let currentSymbol = baseSymbol.trim().toUpperCase();
+      let attempts = 0;
+
+      while (attempts < 50) {
+        try {
+          const params = new URLSearchParams({
+            chainId: baseSepolia.id.toString(),
+            symbol: currentSymbol,
+          });
+          console.log("params:", params);
+          const response = await fetch(
+            `${LLM_AGENT_URL}/api/coin/symbol/availability?${params.toString()}`,
+            {
+              headers: {
+                Accept: "application/json",
+                "ngrok-skip-browser-warning": "true",
+              },
+            }
+          );
+
+          console.log("response:", response);
+          if (!response.ok) {
+            console.warn("Symbol availability check failed:", response.status);
+            return currentSymbol;
+          }
+
+          const result = await response.json();
+          console.log("result: ", result);
+          const available =
+            typeof result?.data?.available === "boolean"
+              ? result.data.available
+              : result?.available;
+
+          if (available === true) {
+            return currentSymbol;
+          }
+        } catch (error) {
+          console.error("Error checking symbol availability:", error);
+          return currentSymbol;
+        }
+
+        const match = currentSymbol.match(symbolPattern);
+        if (!match) {
+          // If the symbol does not follow the expected pattern, append a number.
+          currentSymbol = `${currentSymbol}1`;
+          attempts += 1;
+          continue;
+        }
+
+        const [, numericPart, suffix] = match;
+        const nextNumber = (parseInt(numericPart, 10) + 1).toString();
+        currentSymbol = `LUM${nextNumber}${suffix}`;
         attempts += 1;
-        continue;
       }
 
-      const [, numericPart, suffix] = match;
-      const nextNumber = (parseInt(numericPart, 10) + 1).toString();
-      currentSymbol = `LUM${nextNumber}${suffix}`;
-      attempts += 1;
-    }
-
-    return currentSymbol;
-  };
+      return currentSymbol;
+    },
+    [isConnected, publicClient, walletClient, chainId, isPending]
+  );
 
   const connectWallet = useCallback(async () => {
     if (!isConnected) {
-      connect({ connector: connectors[2] });
+      const connector = connectors[0];
+      if (connector) {
+        connect({ connector });
+      }
     }
-  }, [isConnected, publicClient, walletClient, chainId]);
+  }, [
+    connect,
+    connectors,
+    isConnected,
+    publicClient,
+    walletClient,
+    chainId,
+    isPending,
+  ]);
 
   const onClick = useCallback(async () => {
     try {
@@ -112,7 +136,9 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
       if (!publicClient || !walletClient)
         throw new Error("client initialize Failed... ");
 
+      console.log(metadata.symbol);
       const uniqueSymbol = await ensureUniqueSymbol(metadata.symbol);
+      console.log(uniqueSymbol);
       const workingMetadata: CreateCoinMetadata = {
         ...metadata,
         symbol: uniqueSymbol,
@@ -185,6 +211,7 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
       // SDK가 반환하는 형태에 맞춰 파싱 (문서 예시대로)
       setTxHash(res?.hash);
       setCoinAddress(res?.address);
+      setShowModal(true);
 
       if (LLM_AGENT_URL && res?.hash && res?.address) {
         const payload = {
@@ -218,7 +245,7 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, publicClient, walletClient, chainId]);
+  }, [isConnected, publicClient, walletClient, chainId, isPending]);
 
   return (
     <div className="space-y-2">
@@ -242,23 +269,115 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
           style={{ opacity: loading ? 0.6 : 1 }}
         />
       </button>
-      {txHash && (
-        <div>
-          Tx:{" "}
-          <a href={`https://sepolia.basescan.org/tx/${txHash}`} target="_blank">
-            {txHash}
-          </a>
-        </div>
-      )}
-      {coinAddress && (
-        <div>
-          Coin:{" "}
-          <a
-            href={`https://sepolia.basescan.org/address/${coinAddress}`}
-            target="_blank"
+      {showModal && coinAddress && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.45)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "1.5rem",
+            zIndex: 100,
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Coin deployment result"
+          onClick={() => {
+            setShowModal(false);
+            setTxHash(undefined);
+            setCoinAddress(undefined);
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "22rem",
+              backgroundColor: "#f4f0ff",
+              border: "2px solid #ba75ff",
+              borderRadius: "1rem",
+              boxShadow: "0 16px 32px rgba(34, 0, 92, 0.25)",
+              padding: "1.75rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1.25rem",
+            }}
+            onClick={(event) => event.stopPropagation()}
           >
-            {coinAddress}
-          </a>
+            <div style={{ textAlign: "center" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "1.05rem",
+                  fontWeight: 600,
+                  color: "#47038b",
+                }}
+              >
+                Coin Deployment Complete
+              </p>
+              {txHash && (
+                <p
+                  style={{
+                    marginTop: "0.75rem",
+                    marginBottom: 0,
+                    fontSize: "0.75rem",
+                    color: "#61616b",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  Tx Hash: {txHash}
+                </p>
+              )}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.75rem",
+              }}
+            >
+              <a
+                href={`https://sepolia.basescan.org/address/${coinAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderRadius: "9999px",
+                  background: "#8807ff",
+                  color: "#ffffff",
+                  fontWeight: 600,
+                  padding: "0.75rem 1rem",
+                }}
+              >
+                Go To Scan
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowModal(false);
+                  setTxHash(undefined);
+                  setCoinAddress(undefined);
+                }}
+                style={{
+                  display: "inline-flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderRadius: "9999px",
+                  border: "1px solid #ba75ff",
+                  background: "transparent",
+                  color: "#47038b",
+                  fontWeight: 600,
+                  padding: "0.75rem 1rem",
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
