@@ -275,7 +275,7 @@ export function ChatTab() {
                         <ChatTimeAndCreateCoinWrapper>
                           <CreateCoinButton
                             name={`${context?.user?.username ?? address} Lumina research`}
-                            symbol={`LUM${context?.user?.username?.slice(0, 5).toLocaleUpperCase() ?? address?.slice(2, 7).toLocaleUpperCase()}`}
+                            symbol={`LUM$${context?.user?.username?.slice(0, 5).toLocaleUpperCase() ?? address?.slice(2, 7).toLocaleUpperCase()}`}
                             description={`Lumina Q&A Token by ${context?.user?.username ?? address}`}
                             properties={data}
                           />
