@@ -44,69 +44,96 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
 
   const ensureUniqueSymbol = useCallback(
     async (baseSymbol: string): Promise<string> => {
+      const normalizedBase = baseSymbol.trim().toUpperCase();
       if (!LLM_AGENT_URL) {
-        return baseSymbol;
+        return normalizedBase;
       }
 
-      const symbolPattern = /^LUM(\d+)([A-Za-z]*)$/;
-      let currentSymbol = baseSymbol.trim().toUpperCase();
+      const checkAvailability = async (symbol: string) => {
+        const params = new URLSearchParams({
+          chainId: baseSepolia.id.toString(),
+          symbol,
+        });
+
+        const response = await fetch(
+          `${LLM_AGENT_URL}/api/coin/symbol/availability?${params.toString()}`,
+          {
+            headers: {
+              Accept: "application/json",
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.warn("Symbol availability check failed:", response.status);
+          return true;
+        }
+
+        const result = await response.json();
+        return Boolean(
+          typeof result?.data?.available === "boolean"
+            ? result.data.available
+            : result?.available
+        );
+      };
+
+      if (await checkAvailability(normalizedBase)) {
+        return normalizedBase;
+      }
+
+      const match = normalizedBase.match(/^([A-Z]+?)(\d*)([A-Z]*)$/);
+      let prefix = normalizedBase;
+      let suffix = "";
+      let digitArray: number[] = [];
+
+      if (match) {
+        prefix = match[1];
+        const digitPart = match[2] ?? "";
+        suffix = match[3] ?? "";
+        if (digitPart.length > 0) {
+          digitArray = digitPart.split("").map((digit) => {
+            const parsed = Number(digit);
+            return parsed >= 1 && parsed <= 9 ? parsed : 1;
+          });
+        }
+      }
+
+      const incrementDigits = (digits: number[]): number[] => {
+        const next = [...digits];
+        for (let i = next.length - 1; i >= 0; i -= 1) {
+          if (next[i] < 9) {
+            next[i] += 1;
+            return next;
+          }
+          next[i] = 1;
+        }
+        next.push(1);
+        return next;
+      };
+
+      if (digitArray.length === 0) {
+        digitArray = [1];
+      } else {
+        digitArray = incrementDigits(digitArray);
+      }
+
+      const MAX_ATTEMPTS = 500;
       let attempts = 0;
 
-      while (attempts < 50) {
-        try {
-          const params = new URLSearchParams({
-            chainId: baseSepolia.id.toString(),
-            symbol: currentSymbol,
-          });
-          console.log("params:", params);
-          const response = await fetch(
-            `${LLM_AGENT_URL}/api/coin/symbol/availability?${params.toString()}`,
-            {
-              headers: {
-                Accept: "application/json",
-                "ngrok-skip-browser-warning": "true",
-              },
-            }
-          );
-
-          console.log("response:", response);
-          if (!response.ok) {
-            console.warn("Symbol availability check failed:", response.status);
-            return currentSymbol;
-          }
-
-          const result = await response.json();
-          console.log("result: ", result);
-          const available =
-            typeof result?.data?.available === "boolean"
-              ? result.data.available
-              : result?.available;
-
-          if (available === true) {
-            return currentSymbol;
-          }
-        } catch (error) {
-          console.error("Error checking symbol availability:", error);
-          return currentSymbol;
+      while (attempts < MAX_ATTEMPTS) {
+        const candidate = `${prefix}${digitArray.join("")}${suffix}`;
+        if (await checkAvailability(candidate)) {
+          return candidate;
         }
-
-        const match = currentSymbol.match(symbolPattern);
-        if (!match) {
-          // If the symbol does not follow the expected pattern, append a number.
-          currentSymbol = `${currentSymbol}1`;
-          attempts += 1;
-          continue;
-        }
-
-        const [, numericPart, suffix] = match;
-        const nextNumber = (parseInt(numericPart, 10) + 1).toString();
-        currentSymbol = `LUM${nextNumber}${suffix}`;
+        digitArray = incrementDigits(digitArray);
         attempts += 1;
       }
 
-      return currentSymbol;
+      // As a last resort, append a timestamp-derived suffix to ensure uniqueness.
+      return `${prefix}${Date.now().toString().slice(-6)}${suffix}`;
     },
-    [isConnected, publicClient, walletClient, chainId, isPending]
+    [LLM_AGENT_URL]
   );
 
   const connectWallet = useCallback(async () => {
@@ -116,15 +143,7 @@ export function CreateCoinButton(metadata: CreateCoinMetadata) {
         connect({ connector });
       }
     }
-  }, [
-    connect,
-    connectors,
-    isConnected,
-    publicClient,
-    walletClient,
-    chainId,
-    isPending,
-  ]);
+  }, [connect, connectors, isConnected]);
 
   const onClick = useCallback(async () => {
     try {
