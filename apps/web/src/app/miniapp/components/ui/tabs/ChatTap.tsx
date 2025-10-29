@@ -224,7 +224,7 @@ export function ChatTab() {
                     "You"
                   : `${appDisplayName} Agent`;
                 const timestamp = new Date(entry.timestamp).toLocaleTimeString(
-                  [],
+                  ["en-US"],
                   { hour: "2-digit", minute: "2-digit" }
                 );
                 const userInitial = (
